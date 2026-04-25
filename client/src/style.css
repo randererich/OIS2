@@ -1,0 +1,218 @@
+:root {
+  --bg: #f8f8f8;
+  --text: #1b1b1b;
+  --border: #b7b7b7;
+  --hover: #ececec;
+  --danger: #b42020;
+  --ok: #0f7d0f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Georgia", "Times New Roman", serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 18px;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+h1,
+h2,
+h3 {
+  text-align: center;
+  margin: 8px 0 16px;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.8rem;
+}
+
+h3 {
+  font-size: 1.45rem;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+nav a {
+  color: #333;
+  text-decoration: underline;
+  padding: 2px 4px;
+  font-size: 1.15rem;
+}
+
+nav a.router-link-active {
+  font-weight: bold;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 10px;
+}
+
+.menu-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  font-size: 1.02rem;
+}
+
+th {
+  background: #efefef;
+  text-align: center;
+}
+
+tr.clickable:hover {
+  background: var(--hover);
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+button {
+  border: 1px solid #9d9d9d;
+  background: #f4f4f4;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 1.02rem;
+}
+
+button:hover:not(:disabled) {
+  background: #e7e7e7;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #a9a9a9;
+  background: white;
+  padding: 8px;
+  width: 100%;
+  font-size: 1.02rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.inline-summary {
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.error {
+  color: var(--danger);
+}
+
+.success {
+  color: var(--ok);
+}
+
+.cancelled {
+  color: #737373;
+  text-decoration: line-through;
+}
+
+.number-pad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(70px, 1fr));
+  gap: 6px;
+  max-width: 300px;
+}
+
+.number-pad button {
+  font-size: 1.25rem;
+  padding: 13px;
+}
+
+.filters-row {
+  align-items: end;
+}
+
+.balance-debt {
+  color: #b42020;
+}
+
+.balance-credit {
+  color: #0f7d0f;
+}
+
+.balance-zero {
+  color: #1b1b1b;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+  padding: 16px;
+}
+
+.modal-panel {
+  width: min(1200px, 96vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: white;
+  border: 1px solid var(--border);
+  padding: 12px;
+}
+
+@media (max-width: 800px) {
+  .menu-columns {
+    grid-template-columns: 1fr;
+  }
+}

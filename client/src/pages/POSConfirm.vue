@@ -1,0 +1,148 @@
+<template>
+  <section class="page">
+    <h2>Kinnita ost</h2>
+
+    <template v-if="successBalance">
+      <p class="success confirm-success-title">Ost salvestatud.</p>
+      <p class="confirm-balance" :class="balanceClass(successBalance.balance)">
+        {{ successBalance.first_name }} {{ successBalance.last_name }} -
+        <strong>{{ balanceMessage(successBalance.balance) }}</strong>
+      </p>
+      <button class="confirm-home-button" type="button" @click="goHome">Tagasi avalehele</button>
+    </template>
+
+    <template v-else>
+      <div class="actions">
+        <button type="button" @click="router.push('/person')">Tagasi</button>
+      </div>
+
+      <label>
+        Kommentaar:
+        <textarea v-model="comment" rows="3" />
+      </label>
+
+      <p class="inline-summary">
+        {{ posStore.quantity }} x {{ posStore.product?.name }} = {{ money(posStore.total) }},
+        {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
+      </p>
+
+      <button type="button" :disabled="saving" @click="submit">
+        {{ saving ? 'Salvestan...' : 'Kinnita' }}
+      </button>
+
+      <p v-if="error" class="error">{{ error }}</p>
+    </template>
+  </section>
+</template>
+
+<script setup>
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+import { apiFetch } from "../api/client";
+import { usePosStore } from "../stores/posStore";
+
+const router = useRouter();
+const posStore = usePosStore();
+
+const comment = ref("");
+const saving = ref(false);
+const error = ref("");
+const successBalance = ref(null);
+
+function money(value) {
+  return `${Number(value || 0).toFixed(2)} €`;
+}
+
+function balanceMessage(balance) {
+  const n = Number(balance || 0);
+  if (n > 0) {
+    return `Praegune võlg: ${money(n)}`;
+  }
+  if (n === 0) {
+    return "Võlg puudub";
+  }
+  return `Kontol üle: ${money(Math.abs(n))}`;
+}
+
+function balanceClass(balance) {
+  const n = Number(balance || 0);
+  if (n > 0) {
+    return "balance-debt";
+  }
+  if (n < 0) {
+    return "balance-credit";
+  }
+  return "balance-zero";
+}
+
+function goHome() {
+  successBalance.value = null;
+  router.push("/");
+}
+
+async function submit() {
+  if (!posStore.product || !posStore.person) {
+    return;
+  }
+
+  saving.value = true;
+  error.value = "";
+
+  try {
+    const personId = posStore.person.id;
+
+    await apiFetch("/purchases", {
+      method: "POST",
+      body: JSON.stringify({
+        person_id: personId,
+        product_id: posStore.product.id,
+        quantity: posStore.quantity,
+        comment: comment.value.trim() || null
+      })
+    });
+
+    successBalance.value = await apiFetch(`/people/${personId}/balance`);
+    posStore.reset();
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    saving.value = false;
+  }
+}
+
+onMounted(() => {
+  if (!posStore.product || !posStore.person) {
+    router.replace("/");
+  }
+});
+</script>
+
+<style scoped>
+.confirm-success-title {
+  font-size: 1.7rem;
+  text-align: center;
+}
+
+.confirm-balance {
+  font-size: 1.8rem;
+  text-align: center;
+}
+
+.confirm-home-button {
+  align-self: center;
+  font-size: 1.3rem;
+  padding: 12px 20px;
+}
+
+.balance-debt {
+  color: #b42020;
+}
+
+.balance-credit {
+  color: #0f7d0f;
+}
+
+.balance-zero {
+  color: #1b1b1b;
+}
+</style>
