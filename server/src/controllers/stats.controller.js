@@ -1,4 +1,4 @@
-import { query } from "../db.js";
+import { hasTableColumn, query } from "../db.js";
 
 function getLimit(rawLimit) {
   const parsed = Number.parseInt(rawLimit || "20", 10);
@@ -102,6 +102,10 @@ export async function getTopItemCounts(req, res, next) {
 
 export async function getTopProductsByQuantity(req, res, next) {
   try {
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT AS unit";
+    const unitGroupBy = hasProductUnit ? ", pr.unit" : "";
+
     const limit = getLimit(req.query.limit);
     const dateFilter = buildDateFilter(req, 1);
     const params = [...dateFilter.params, limit];
@@ -110,13 +114,14 @@ export async function getTopProductsByQuantity(req, res, next) {
       `SELECT
          pr.id,
          pr.name,
+        ${unitSql},
          COALESCE(SUM(pu.quantity), 0)::INT AS total_quantity,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_revenue
        FROM products pr
        JOIN purchases pu ON pu.product_id = pr.id
        WHERE pu.is_cancelled = FALSE
          ${dateFilter.sql}
-       GROUP BY pr.id, pr.name
+      GROUP BY pr.id, pr.name${unitGroupBy}
        ORDER BY total_quantity DESC, total_revenue DESC, pr.name ASC
        LIMIT $${params.length}`,
       params
@@ -129,6 +134,10 @@ export async function getTopProductsByQuantity(req, res, next) {
 
 export async function getTopProductsByRevenue(req, res, next) {
   try {
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT AS unit";
+    const unitGroupBy = hasProductUnit ? ", pr.unit" : "";
+
     const limit = getLimit(req.query.limit);
     const dateFilter = buildDateFilter(req, 1);
     const params = [...dateFilter.params, limit];
@@ -137,13 +146,14 @@ export async function getTopProductsByRevenue(req, res, next) {
       `SELECT
          pr.id,
          pr.name,
+        ${unitSql},
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_revenue,
          COALESCE(SUM(pu.quantity), 0)::INT AS total_quantity
        FROM products pr
        JOIN purchases pu ON pu.product_id = pr.id
        WHERE pu.is_cancelled = FALSE
          ${dateFilter.sql}
-       GROUP BY pr.id, pr.name
+      GROUP BY pr.id, pr.name${unitGroupBy}
        ORDER BY total_revenue DESC, total_quantity DESC, pr.name ASC
        LIMIT $${params.length}`,
       params
@@ -156,6 +166,10 @@ export async function getTopProductsByRevenue(req, res, next) {
 
 export async function getProductBuyers(req, res, next) {
   try {
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT AS unit";
+    const unitGroupBy = hasProductUnit ? ", pr.unit" : "";
+
     const productId = Number(req.params.id);
     const limit = getLimit(req.query.limit);
     if (!productId) {
@@ -170,14 +184,16 @@ export async function getProductBuyers(req, res, next) {
          pe.id,
          pe.first_name,
          pe.last_name,
+        ${unitSql},
          COALESCE(SUM(pu.quantity), 0)::INT AS amount,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_spent
        FROM purchases pu
+       JOIN products pr ON pr.id = pu.product_id
        JOIN people pe ON pe.id = pu.person_id
        WHERE pu.product_id = $1
          AND pu.is_cancelled = FALSE
          ${dateFilter.sql}
-       GROUP BY pe.id, pe.first_name, pe.last_name
+      GROUP BY pe.id, pe.first_name, pe.last_name${unitGroupBy}
        ORDER BY amount DESC, total_spent DESC, pe.last_name ASC
        LIMIT $${params.length}`,
       params
@@ -260,6 +276,10 @@ export async function getMonthTopSpenders(req, res, next) {
 
 export async function getMonthTopProducts(req, res, next) {
   try {
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT AS unit";
+    const unitGroupBy = hasProductUnit ? ", pr.unit" : "";
+
     const limit = getLimit(req.query.limit);
     const parsedMonth = parseMonth(req.query.month);
 
@@ -271,6 +291,7 @@ export async function getMonthTopProducts(req, res, next) {
       `SELECT
          pr.id,
          pr.name,
+        ${unitSql},
          COALESCE(SUM(pu.quantity), 0)::INT AS total_quantity,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_revenue
        FROM purchases pu
@@ -278,7 +299,7 @@ export async function getMonthTopProducts(req, res, next) {
        WHERE pu.is_cancelled = FALSE
          AND pu.created_at >= $1
          AND pu.created_at < $2
-       GROUP BY pr.id, pr.name
+      GROUP BY pr.id, pr.name${unitGroupBy}
        ORDER BY total_quantity DESC, total_revenue DESC, pr.name ASC
        LIMIT $3`,
       [parsedMonth.start.toISOString(), parsedMonth.end.toISOString(), limit]

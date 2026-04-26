@@ -12,10 +12,15 @@
 
     <label class="pos-quantity-input-wrap">
       Kogus
-      <input class="pos-quantity-input" v-model="inputValue" inputmode="numeric" />
+      <input class="pos-quantity-input" v-model="inputValue" inputmode="text" />
     </label>
 
-    <NumberPad @input="append" @backspace="backspace" class="pos-quantity-pad" />
+    <NumberPad
+      class="pos-quantity-pad"
+      @input="append"
+      @backspace="backspace"
+      @toggle-sign="toggleSign"
+    />
 
     <div class="actions pos-quantity-actions-bottom">
       <button class="pos-quantity-big-button" type="button" @click="nextStep">Edasi</button>
@@ -26,7 +31,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import NumberPad from "../components/NumberPad.vue";
 import { usePosStore } from "../stores/posStore";
@@ -36,6 +41,22 @@ const posStore = usePosStore();
 const inputValue = ref("1");
 const isDefaultEntry = ref(true);
 const error = ref("");
+
+function sanitizeRawInput(raw) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const negative = trimmed.startsWith("-");
+  const digits = trimmed.replace(/[^\d]/g, "");
+  if (!digits) {
+    return negative ? "-" : "";
+  }
+
+  const normalized = String(Number.parseInt(digits, 10));
+  return negative ? `-${normalized}` : normalized;
+}
 
 function resetDefaultEntry() {
   posStore.setQuantity(1);
@@ -49,10 +70,6 @@ function money(value) {
 }
 
 function append(char) {
-  if (char === "." || char === ",") {
-    return;
-  }
-
   if (!/^\d$/.test(char)) {
     return;
   }
@@ -66,6 +83,25 @@ function append(char) {
   inputValue.value = inputValue.value === "0" ? char : inputValue.value + char;
 }
 
+function toggleSign() {
+  if (isDefaultEntry.value) {
+    inputValue.value = "-1";
+    isDefaultEntry.value = false;
+    return;
+  }
+
+  const normalized = sanitizeRawInput(inputValue.value);
+  if (!normalized || normalized === "0") {
+    inputValue.value = "1";
+    isDefaultEntry.value = true;
+    return;
+  }
+
+  inputValue.value = normalized.startsWith("-")
+    ? normalized.slice(1)
+    : `-${normalized}`;
+}
+
 function backspace() {
   if (isDefaultEntry.value) {
     inputValue.value = "1";
@@ -73,7 +109,7 @@ function backspace() {
   }
 
   inputValue.value = inputValue.value.slice(0, -1);
-  if (!inputValue.value) {
+  if (!inputValue.value || inputValue.value === "-") {
     inputValue.value = "1";
     isDefaultEntry.value = true;
   }
@@ -81,9 +117,9 @@ function backspace() {
 
 function nextStep() {
   error.value = "";
-  const quantity = Number.parseInt(inputValue.value, 10);
-  if (!Number.isInteger(quantity) || quantity <= 0) {
-    error.value = "Palun sisesta korrektne kogus.";
+  const quantity = Number.parseInt(sanitizeRawInput(inputValue.value), 10);
+  if (!Number.isInteger(quantity) || quantity === 0) {
+    error.value = "Palun sisesta korrektne kogus (mitte 0).";
     return;
   }
 
@@ -99,6 +135,25 @@ onMounted(() => {
 
   resetDefaultEntry();
 });
+
+// Normalize manual keyboard edits and preserve the "replace first number" behavior.
+function handleManualInput() {
+  const normalized = sanitizeRawInput(inputValue.value);
+  if (!normalized || normalized === "-") {
+    inputValue.value = "1";
+    isDefaultEntry.value = true;
+    return;
+  }
+
+  inputValue.value = normalized;
+  isDefaultEntry.value = normalized === "1";
+}
+
+watch(inputValue, () => {
+  if (document.activeElement?.classList?.contains("pos-quantity-input")) {
+    handleManualInput();
+  }
+});
 </script>
 
 <style scoped>
@@ -107,11 +162,11 @@ onMounted(() => {
 }
 
 .pos-quantity-title {
-  font-size: 2rem;
+  font-size: 2.35rem;
 }
 
 .pos-quantity-summary {
-  font-size: 1.35rem;
+  font-size: 1.55rem;
 }
 
 .pos-quantity-actions-top,
@@ -122,34 +177,34 @@ onMounted(() => {
 
 .pos-quantity-input-wrap {
   width: 100%;
-  max-width: 340px;
-  font-size: 1.2rem;
+  max-width: 440px;
+  font-size: 1.45rem;
 }
 
 .pos-quantity-input {
   text-align: center;
-  font-size: 2rem;
-  padding: 12px;
+  font-size: 2.7rem;
+  padding: 16px;
 }
 
 .pos-quantity-pad {
   width: 100%;
-  max-width: 360px;
+  max-width: 520px;
 }
 
 .pos-quantity-pad :deep(.number-pad) {
-  max-width: 360px;
+  max-width: 520px;
   margin: 0 auto;
 }
 
 .pos-quantity-pad :deep(.number-pad button) {
-  font-size: 1.6rem;
-  padding: 16px;
+  font-size: 2rem;
+  padding: 22px;
 }
 
 .pos-quantity-big-button {
-  font-size: 1.35rem;
-  padding: 12px 24px;
-  min-width: 220px;
+  font-size: 1.75rem;
+  padding: 16px 30px;
+  min-width: 280px;
 }
 </style>

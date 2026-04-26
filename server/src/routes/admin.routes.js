@@ -6,6 +6,7 @@ import {
 } from "../controllers/categories.controller.js";
 import {
   createInventoryReportController,
+  getInventory,
   getInventoryCountProducts,
   getInventoryReportById,
   getInventoryReports,
@@ -24,7 +25,7 @@ import {
   updateProduct
 } from "../controllers/products.controller.js";
 import { getCategories } from "../controllers/categories.controller.js";
-import { getPurchases, patchCancelPurchase } from "../controllers/purchases.controller.js";
+import { getPurchases } from "../controllers/purchases.controller.js";
 
 const router = Router();
 
@@ -48,8 +49,8 @@ router.put("/people/:id", updatePerson);
 router.delete("/people/:id", deletePerson);
 
 router.get("/purchases", getPurchases);
-router.patch("/purchases/:id/cancel", patchCancelPurchase);
 
+router.get("/inventory", getInventory);
 router.post("/inventory/movement", postInventoryMovement);
 router.get("/inventory/count-products", getInventoryCountProducts);
 router.post("/inventory/reports", createInventoryReportController);

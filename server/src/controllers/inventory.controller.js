@@ -1,13 +1,17 @@
-import { query } from "../db.js";
+import { hasTableColumn, query } from "../db.js";
 import { addInventoryMovement, createInventoryReport } from "../services/inventory.service.js";
 
 export async function getInventory(req, res, next) {
   try {
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "p.unit" : "'tk'::TEXT AS unit";
+
     const result = await query(
       `SELECT
          p.id,
          p.name,
          p.stock_quantity,
+         ${unitSql},
          p.price,
          p.is_inventory_tracked,
          c.name AS category_name,
@@ -25,11 +29,15 @@ export async function getInventory(req, res, next) {
 
 export async function getInventoryCountProducts(req, res, next) {
   try {
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "p.unit" : "'tk'::TEXT AS unit";
+
     const result = await query(
       `SELECT
          p.id,
          p.name,
          p.stock_quantity AS expected_quantity,
+         ${unitSql},
          c.name AS category_name
        FROM products p
        LEFT JOIN categories c ON c.id = p.category_id
@@ -67,24 +75,59 @@ export async function postInventoryMovement(req, res, next) {
 
 export async function createInventoryReportController(req, res, next) {
   try {
-    const { comment, counts } = req.body;
+    const { comment, valvevarv, counts } = req.body;
     if (!Array.isArray(counts) || counts.length === 0) {
       return res.status(400).json({ error: "counts array is required" });
     }
 
-    const result = await createInventoryReport({ comment, counts });
+    if (!String(valvevarv || "").trim()) {
+      return res.status(400).json({ error: "valvevarv is required" });
+    }
+
+    const result = await createInventoryReport({ comment, valvevarv, counts });
     res.status(201).json(result);
   } catch (error) {
     next(error);
   }
 }
 
+function reportStatus(totalExpected, totalCounted) {
+  const expected = Number(totalExpected || 0);
+  const counted = Number(totalCounted || 0);
+
+  if (counted >= expected) {
+    return { status: "Korras", status_color: "green", loss_percent: 0 };
+  }
+
+  if (expected <= 0) {
+    return { status: "Korras", status_color: "green", loss_percent: 0 };
+  }
+
+  const lossPercent = (Math.abs(counted - expected) / expected) * 100;
+  if (lossPercent <= 5) {
+    return { status: "Väike puudujääk", status_color: "yellow", loss_percent: Number(lossPercent.toFixed(2)) };
+  }
+
+  return { status: "Suur puudujääk", status_color: "red", loss_percent: Number(lossPercent.toFixed(2)) };
+}
+
 export async function getInventoryReports(req, res, next) {
   try {
+    const hasValvevarv = await hasTableColumn("inventory_count_reports", "valvevarv");
+    const valvevarvSql = hasValvevarv ? "r.valvevarv" : "'Määramata'::TEXT AS valvevarv";
+    const valvevarvGroupBy = hasValvevarv ? ", r.valvevarv" : "";
+
+    const defaultLimit = req.baseUrl.startsWith("/api/admin") ? 14 : 50;
+    const requestedLimit = Number.parseInt(String(req.query.limit || defaultLimit), 10);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 100)
+      : defaultLimit;
+
+    const params = [limit];
+    const where = [];
+
     const dateFrom = (req.query.date_from || "").trim();
     const dateTo = (req.query.date_to || "").trim();
-    const params = [];
-    const where = [];
 
     if (dateFrom) {
       params.push(dateFrom);
@@ -102,18 +145,27 @@ export async function getInventoryReports(req, res, next) {
       `SELECT
          r.id,
          r.created_at,
+         ${valvevarvSql},
          r.comment,
          COUNT(c.id)::INT AS counted_products,
-         COALESCE(SUM(ABS(c.difference)), 0)::INT AS total_absolute_difference
+         COALESCE(SUM(ABS(c.difference)), 0)::INT AS total_absolute_difference,
+         COALESCE(SUM(c.expected_quantity), 0)::INT AS total_expected,
+         COALESCE(SUM(c.counted_quantity), 0)::INT AS total_counted
        FROM inventory_count_reports r
        LEFT JOIN inventory_counts c ON c.report_id = r.id
        ${whereSql}
-       GROUP BY r.id, r.created_at, r.comment
+       GROUP BY r.id, r.created_at${valvevarvGroupBy}, r.comment
        ORDER BY r.created_at DESC
-       LIMIT 200`,
+       LIMIT $1`,
       params
     );
-    res.json(result.rows);
+
+    const mapped = result.rows.map((row) => ({
+      ...row,
+      ...reportStatus(row.total_expected, row.total_counted)
+    }));
+
+    res.json(mapped);
   } catch (error) {
     next(error);
   }
@@ -126,8 +178,13 @@ export async function getInventoryReportById(req, res, next) {
       return res.status(400).json({ error: "valid report id is required" });
     }
 
+    const hasValvevarv = await hasTableColumn("inventory_count_reports", "valvevarv");
+    const reportSelect = hasValvevarv
+      ? "id, created_at, valvevarv, comment"
+      : "id, created_at, 'Määramata'::TEXT AS valvevarv, comment";
+
     const reportResult = await query(
-      `SELECT id, created_at, comment
+      `SELECT ${reportSelect}
        FROM inventory_count_reports
        WHERE id = $1`,
       [reportId]
@@ -136,6 +193,9 @@ export async function getInventoryReportById(req, res, next) {
     if (reportResult.rowCount === 0) {
       return res.status(404).json({ error: "Report not found" });
     }
+
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "p.unit" : "'tk'::TEXT AS unit";
 
     const rowsResult = await query(
       `SELECT
@@ -146,7 +206,8 @@ export async function getInventoryReportById(req, res, next) {
          c.expected_quantity,
          c.counted_quantity,
          c.difference,
-         c.comment
+         c.comment,
+         ${unitSql}
        FROM inventory_counts c
        JOIN products p ON p.id = c.product_id
        LEFT JOIN categories cat ON cat.id = p.category_id
@@ -155,9 +216,18 @@ export async function getInventoryReportById(req, res, next) {
       [reportId]
     );
 
+    const rows = rowsResult.rows;
+    const totalExpected = rows.reduce((sum, row) => sum + Number(row.expected_quantity || 0), 0);
+    const totalCounted = rows.reduce((sum, row) => sum + Number(row.counted_quantity || 0), 0);
+
     res.json({
-      report: reportResult.rows[0],
-      rows: rowsResult.rows
+      report: {
+        ...reportResult.rows[0],
+        total_expected: totalExpected,
+        total_counted: totalCounted,
+        ...reportStatus(totalExpected, totalCounted)
+      },
+      rows
     });
   } catch (error) {
     next(error);

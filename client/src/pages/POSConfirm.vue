@@ -22,7 +22,10 @@
       </label>
 
       <p class="inline-summary">
-        {{ posStore.quantity }} x {{ posStore.product?.name }} = {{ money(posStore.total) }},
+        <template v-if="isCorrection">
+          <strong>Parandus:</strong>
+        </template>
+        {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ posStore.product?.name }} = {{ money(posStore.total) }},
         {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
       </p>
 
@@ -36,7 +39,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { apiFetch } from "../api/client";
 import { usePosStore } from "../stores/posStore";
@@ -48,6 +51,7 @@ const comment = ref("");
 const saving = ref(false);
 const error = ref("");
 const successBalance = ref(null);
+const isCorrection = computed(() => Number(posStore.quantity || 0) < 0);
 
 function money(value) {
   return `${Number(value || 0).toFixed(2)} €`;

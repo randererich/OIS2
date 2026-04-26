@@ -18,10 +18,7 @@
         <RouterLink to="/admin/products">Tooted</RouterLink>
         <RouterLink to="/admin/categories">Kategooriad</RouterLink>
         <RouterLink to="/admin/people">Inimesed</RouterLink>
-        <RouterLink to="/admin/stock-overview">Varude ulevaade</RouterLink>
-        <RouterLink to="/admin/stock-add">Varu lisamine</RouterLink>
-        <RouterLink to="/admin/inventory-count">Inventuur</RouterLink>
-        <RouterLink to="/admin/inventory-reports">Inventuuri raportid</RouterLink>
+        <RouterLink to="/admin/inventory">Varud / Inventuur</RouterLink>
         <RouterLink to="/admin/purchases">Kirjed (admin)</RouterLink>
       </nav>
     </header>

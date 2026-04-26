@@ -1,4 +1,14 @@
-import { query } from "../db.js";
+import { hasTableColumn, query } from "../db.js";
+
+const COETUS_SORT_SQL = `
+  CASE WHEN coetus ~ '^\\d{4}/(I|II)$' THEN 1 ELSE 0 END DESC,
+  CASE WHEN coetus ~ '^\\d{4}/(I|II)$' THEN split_part(coetus, '/', 1)::INT ELSE 0 END DESC,
+  CASE split_part(coetus, '/', 2)
+    WHEN 'II' THEN 2
+    WHEN 'I' THEN 1
+    ELSE 0
+  END DESC
+`;
 
 function parseMonth(monthInput) {
   if (!/^\d{4}-\d{2}$/.test(monthInput || "")) {
@@ -59,10 +69,48 @@ export async function getVisiblePeople(req, res, next) {
       `SELECT *
        FROM people
        WHERE ${where.join(" AND ")}
-       ORDER BY sort_order ASC, coetus ASC NULLS LAST, last_name ASC, first_name ASC
+       ORDER BY ${COETUS_SORT_SQL}, sort_order ASC, last_name ASC, first_name ASC
        LIMIT 200`,
       params
     );
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getRecentBuyers(req, res, next) {
+  try {
+    const requestedMinutes = Number.parseInt(String(req.query.minutes || "20"), 10);
+    const minutes = Number.isInteger(requestedMinutes) && requestedMinutes > 0
+      ? Math.min(requestedMinutes, 720)
+      : 20;
+
+    const result = await query(
+      `WITH recent AS (
+         SELECT
+           pu.person_id,
+           MAX(pu.created_at) AS last_purchase_at
+         FROM purchases pu
+         WHERE pu.is_cancelled = FALSE
+           AND pu.created_at >= NOW() - ($1::INT * INTERVAL '1 minute')
+         GROUP BY pu.person_id
+       )
+       SELECT
+         pe.id,
+         pe.first_name,
+         pe.last_name,
+         pe.coetus,
+         pe.konvent,
+         r.last_purchase_at,
+         pd.debt AS balance
+       FROM recent r
+       JOIN people pe ON pe.id = r.person_id
+       LEFT JOIN person_debts pd ON pd.id = pe.id
+       ORDER BY r.last_purchase_at DESC, pe.last_name ASC, pe.first_name ASC`,
+      [minutes]
+    );
+
     res.json(result.rows);
   } catch (error) {
     next(error);
@@ -142,13 +190,16 @@ export async function getPersonMonthlyPurchases(req, res, next) {
       params
     );
 
+        const hasProductUnit = await hasTableColumn("products", "unit");
+        const unitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT AS unit";
+
     const purchasesResult = await query(
       `SELECT
          pu.id,
          pu.created_at,
          pr.name AS product_name,
+          ${unitSql},
          pu.quantity,
-         pu.unit_price,
          pu.total_price,
          pu.comment,
          pu.is_cancelled

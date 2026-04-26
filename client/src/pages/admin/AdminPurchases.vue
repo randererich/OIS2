@@ -22,11 +22,9 @@
           <th>Inimene</th>
           <th>Toode</th>
           <th>Kogus</th>
-          <th>Uhiku hind</th>
           <th>Kokku</th>
           <th>Kommentaar</th>
-          <th>Tuhistatud</th>
-          <th>Tegevus</th>
+          <th>Staatus</th>
         </tr>
       </thead>
       <tbody>
@@ -34,14 +32,10 @@
           <td>{{ formatDate(purchase.created_at) }}</td>
           <td>{{ purchase.first_name }} {{ purchase.last_name }}</td>
           <td>{{ purchase.product_name }}</td>
-          <td>{{ purchase.quantity }}</td>
-          <td>{{ money(purchase.unit_price) }}</td>
+          <td>{{ purchase.quantity }} {{ purchase.product_unit || 'tk' }}</td>
           <td>{{ money(purchase.total_price) }}</td>
           <td>{{ purchase.comment || '-' }}</td>
-          <td>{{ purchase.is_cancelled ? 'Jah' : 'Ei' }}</td>
-          <td>
-            <button v-if="!purchase.is_cancelled" type="button" @click="cancelPurchase(purchase)">Tuhista</button>
-          </td>
+          <td>{{ purchaseStatus(purchase) }}</td>
         </tr>
       </tbody>
     </table>
@@ -61,6 +55,16 @@ function money(value) {
   return `${Number(value || 0).toFixed(2)} €`;
 }
 
+function purchaseStatus(purchase) {
+  if (purchase.is_cancelled) {
+    return "Tühistatud";
+  }
+  if (Number(purchase.quantity || 0) < 0) {
+    return "Parandus";
+  }
+  return "-";
+}
+
 function formatDate(value) {
   return new Date(value).toLocaleString("et-EE");
 }
@@ -75,23 +79,6 @@ async function loadPurchases() {
       params.set("q", search.value.trim());
     }
     purchases.value = await apiFetchAdmin(`/admin/purchases?${params.toString()}`);
-  } catch (err) {
-    error.value = err.message;
-  }
-}
-
-async function cancelPurchase(purchase) {
-  const reason = window.prompt("Tuhistamise pohjus:", "vale isik");
-  if (!reason) {
-    return;
-  }
-
-  try {
-    await apiFetchAdmin(`/admin/purchases/${purchase.id}/cancel`, {
-      method: "PATCH",
-      body: JSON.stringify({ cancellation_reason: reason })
-    });
-    await loadPurchases();
   } catch (err) {
     error.value = err.message;
   }

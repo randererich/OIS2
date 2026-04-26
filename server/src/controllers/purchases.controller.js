@@ -1,8 +1,11 @@
-import { query } from "../db.js";
-import { cancelPurchase, createPurchase } from "../services/purchase.service.js";
+import { hasTableColumn, query } from "../db.js";
+import { createPurchase } from "../services/purchase.service.js";
 
 export async function getPurchases(req, res, next) {
   try {
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "pr.unit AS product_unit" : "'tk'::TEXT AS product_unit";
+
     const q = (req.query.search || req.query.q || "").trim();
     const includeCancelled = String(req.query.include_cancelled || "false") === "true";
     const dateFrom = (req.query.date_from || "").trim();
@@ -49,7 +52,8 @@ export async function getPurchases(req, res, next) {
          pu.*,
          pe.first_name,
          pe.last_name,
-         pr.name AS product_name
+         pr.name AS product_name,
+         ${unitSql}
        FROM purchases pu
        JOIN people pe ON pe.id = pu.person_id
        JOIN products pr ON pr.id = pu.product_id
@@ -70,8 +74,8 @@ export async function postPurchase(req, res, next) {
   try {
     const { person_id, product_id, quantity, comment } = req.body;
 
-    if (!person_id || !product_id || !Number.isInteger(Number(quantity)) || Number(quantity) <= 0) {
-      return res.status(400).json({ error: "person_id, product_id and positive integer quantity are required" });
+    if (!person_id || !product_id || !Number.isInteger(Number(quantity)) || Number(quantity) === 0) {
+      return res.status(400).json({ error: "person_id, product_id and non-zero integer quantity are required" });
     }
 
     const purchase = await createPurchase({
@@ -87,22 +91,3 @@ export async function postPurchase(req, res, next) {
   }
 }
 
-export async function patchCancelPurchase(req, res, next) {
-  try {
-    const id = Number(req.params.id);
-    const { cancellation_reason } = req.body;
-
-    if (!id) {
-      return res.status(400).json({ error: "valid purchase id is required" });
-    }
-
-    const cancelled = await cancelPurchase({
-      purchaseId: id,
-      cancellationReason: cancellation_reason || "cancelled"
-    });
-
-    res.json(cancelled);
-  } catch (error) {
-    next(error);
-  }
-}

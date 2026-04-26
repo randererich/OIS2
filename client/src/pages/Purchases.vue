@@ -38,10 +38,9 @@
           <th>Inimene</th>
           <th>Toode</th>
           <th>Kogus</th>
-          <th>Ühiku hind</th>
           <th>Kokku</th>
           <th>Kommentaar</th>
-          <th>Tühistatud</th>
+          <th>Staatus</th>
         </tr>
       </thead>
       <tbody>
@@ -49,11 +48,10 @@
           <td>{{ formatDate(purchase.created_at) }}</td>
           <td>{{ purchase.first_name }} {{ purchase.last_name }}</td>
           <td>{{ purchase.product_name }}</td>
-          <td>{{ purchase.quantity }}</td>
-          <td>{{ money(purchase.unit_price) }}</td>
-          <td>{{ money(purchase.total_price) }}</td>
+          <td>{{ purchase.quantity }} {{ purchase.product_unit || 'tk' }}</td>
+          <td :class="purchase.total_price < 0 ? 'balance-credit' : ''">{{ money(purchase.total_price) }}</td>
           <td>{{ purchase.comment || '-' }}</td>
-          <td>{{ purchase.is_cancelled ? 'Jah' : 'Ei' }}</td>
+          <td>{{ statusLabel(purchase) }}</td>
         </tr>
       </tbody>
     </table>
@@ -85,6 +83,16 @@ function money(value) {
 
 function formatDate(value) {
   return new Date(value).toLocaleString("et-EE");
+}
+
+function statusLabel(purchase) {
+  if (purchase.is_cancelled) {
+    return "Tühistatud";
+  }
+  if (Number(purchase.quantity || 0) < 0) {
+    return "Parandus";
+  }
+  return "-";
 }
 
 function buildParams(currentOffset) {

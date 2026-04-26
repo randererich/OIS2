@@ -29,6 +29,14 @@
       </label>
 
       <label>
+        Ühik
+        <select v-model="form.unit" required>
+          <option value="tk">tk</option>
+          <option value="cl">cl</option>
+        </select>
+      </label>
+
+      <label>
         <input v-model="form.is_visible" type="checkbox" /> Nahtav
       </label>
 
@@ -51,6 +59,7 @@
           <th>Kategooria</th>
           <th>Hind</th>
           <th>Laos</th>
+          <th>Ühik</th>
           <th>Nahtav</th>
           <th>Jalgitav</th>
           <th>Jarjekord</th>
@@ -63,6 +72,7 @@
           <td>{{ product.category_name || '-' }}</td>
           <td>{{ money(product.price) }}</td>
           <td>{{ product.stock_quantity }}</td>
+          <td>{{ product.unit || 'tk' }}</td>
           <td>{{ product.is_visible ? 'Jah' : 'Ei' }}</td>
           <td>{{ product.is_inventory_tracked ? 'Jah' : 'Ei' }}</td>
           <td>{{ product.sort_order }}</td>
@@ -92,6 +102,7 @@ const initialForm = () => ({
   name: "",
   price: "0.00",
   stock_quantity: "0",
+  unit: "tk",
   is_visible: true,
   is_inventory_tracked: true
 });
@@ -126,6 +137,7 @@ function editProduct(product) {
   form.name = product.name;
   form.price = String(product.price);
   form.stock_quantity = String(product.stock_quantity);
+  form.unit = product.unit || "tk";
   form.is_visible = product.is_visible;
   form.is_inventory_tracked = product.is_inventory_tracked;
 }
@@ -137,6 +149,7 @@ async function saveProduct() {
     name: form.name,
     price: Number(form.price),
     stock_quantity: Number.parseInt(form.stock_quantity, 10),
+    unit: form.unit,
     is_visible: Boolean(form.is_visible),
     is_inventory_tracked: Boolean(form.is_inventory_tracked)
   };

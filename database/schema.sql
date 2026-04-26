@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS products (
   category_id INT REFERENCES categories(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   price NUMERIC(10,2) NOT NULL,
+  unit TEXT NOT NULL DEFAULT 'tk',
   stock_quantity INT NOT NULL DEFAULT 0,
   is_visible BOOLEAN NOT NULL DEFAULT TRUE,
   is_inventory_tracked BOOLEAN NOT NULL DEFAULT TRUE,
@@ -64,8 +65,29 @@ CREATE TABLE IF NOT EXISTS inventory_movements (
 CREATE TABLE IF NOT EXISTS inventory_count_reports (
   id SERIAL PRIMARY KEY,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  valvevarv TEXT,
   comment TEXT
 );
+
+ALTER TABLE products
+ADD COLUMN IF NOT EXISTS unit TEXT NOT NULL DEFAULT 'tk';
+
+UPDATE products p
+SET unit = 'cl'
+FROM categories c
+WHERE p.category_id = c.id
+  AND c.name = 'KANGE ALKOHOL'
+  AND p.unit <> 'cl';
+
+ALTER TABLE inventory_count_reports
+ADD COLUMN IF NOT EXISTS valvevarv TEXT;
+
+UPDATE inventory_count_reports
+SET valvevarv = 'Määramata'
+WHERE valvevarv IS NULL;
+
+ALTER TABLE inventory_count_reports
+ALTER COLUMN valvevarv SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS inventory_counts (
   id SERIAL PRIMARY KEY,

@@ -86,16 +86,14 @@ If local `psql` is missing, import SQL through Docker:
 - `/admin/products`
 - `/admin/categories`
 - `/admin/people`
-- `/admin/stock-overview`
-- `/admin/stock-add`
-- `/admin/inventory-count`
-- `/admin/inventory-reports`
+- `/admin/inventory` (varud + varu lisamine + viimased inventuurid)
 - `/admin/purchases`
 
 ## Regular API Highlights
 
 - `GET /api/products/menu`
 - `GET /api/people/visible`
+- `GET /api/people/recent-buyers?minutes=20`
 - `GET /api/people/:id/balance`
 - `GET /api/people/:id/monthly-purchases?month=YYYY-MM&include_cancelled=false`
 - `POST /api/purchases`
@@ -115,46 +113,37 @@ If local `psql` is missing, import SQL through Docker:
 - `PUT /api/admin/people/:id`
 - `DELETE /api/admin/people/:id`
 - `PATCH /api/admin/purchases/:id/cancel`
+- `GET /api/admin/inventory`
 - `POST /api/admin/inventory/movement`
-- `POST /api/admin/inventory/reports`
-- `GET /api/admin/inventory/reports`
+- `GET /api/admin/inventory/reports?limit=14`
 - `GET /api/admin/inventory/reports/:id`
 
 ## Inventory Workflow
 
-Stock addition and inventory counting are separated:
+Stock addition and inventory counting are separated by role:
 
 - Regular inventory (`/inventory`):
-  - daily inventory counting and report saving
-  - inventory report log and report detail view
+  - daily inventory counting and report saving only
+  - requires `Valvevärv` and supports per-row comments
+  - shows dynamic inventory status (green/yellow/red) based on difference
   - updates stock via transactional report save
 
-- Stock addition (`/admin/stock-add`):
-  - for incoming stock
-  - UI asks only product, quantity and optional comment
-  - backend stores reason as `stock_add`
-  - writes `inventory_movements`
-  - increases `products.stock_quantity`
-
-- Inventory count (`/admin/inventory-count`):
-  - admin-side advanced counting view
-  - saves one report header to `inventory_count_reports`
-  - saves count rows to `inventory_counts`
-  - updates each product stock to counted quantity
-  - all done in a single database transaction
-
-- Inventory reports (`/admin/inventory-reports`):
-  - shows saved reports permanently
-  - opens detailed lines with expected vs counted differences
+- Admin inventory (`/admin/inventory`):
+  - shows current stock overview
+  - supports incoming stock adds via `inventory/movement` with reason `stock_add`
+  - shows last 14 inventory reports with status and detail modal
 
 ## Important Business Rules
 
 - Old purchases keep original unit price.
+- Quantity `0` is rejected; negative quantities are allowed as corrections.
+- Purchase/debt/statistics views mark negative quantity rows as `Parandus`.
 - Debt is calculated from purchases and payments (not stored directly).
 - Purchases are not deleted; mistakes are cancelled.
 - Cancelled purchases are excluded from debt and statistics.
 - Cancelling tracked purchases adds quantity back to stock.
 - Stock can go negative.
+- Product unit is explicit (`tk` or `cl`) and is shown in POS, purchases, debts, inventory and stats.
 - Product visibility controls menu visibility.
 - Inventory-tracked flag controls stock deduction on purchase.
 - People visibility controls buyer selection.

@@ -68,7 +68,7 @@
       </thead>
       <tbody>
         <tr v-for="(row, index) in rows" :key="row.id || index">
-          <td v-for="column in columns" :key="column">{{ formatCell(column, row[column]) }}</td>
+          <td v-for="column in columns" :key="column">{{ formatCell(column, row[column], row) }}</td>
         </tr>
       </tbody>
     </table>
@@ -128,13 +128,22 @@ function prettyHeader(header) {
   return header.replaceAll("_", " ");
 }
 
-function formatCell(column, value) {
+function rowUnit(row) {
+  return row.unit || row.product_unit || null;
+}
+
+function formatCell(column, value, row) {
   if (column === "info") {
     return "Andmed puuduvad";
   }
 
   if (["total_spent", "total_sum", "total_revenue", "debt", "balance", "credit_amount"].includes(column)) {
     return money(value);
+  }
+
+  if (["quantity", "total_quantity", "total_items", "items_count"].includes(column)) {
+    const unit = rowUnit(row);
+    return unit ? `${value} ${unit}` : value;
   }
 
   return value;

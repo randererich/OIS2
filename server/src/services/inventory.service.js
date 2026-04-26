@@ -1,4 +1,4 @@
-import { transaction } from "../db.js";
+import { hasTableColumn, transaction } from "../db.js";
 
 export async function addInventoryMovement({ productId, quantityChange, reason, comment }) {
   return transaction(async (client) => {
@@ -31,14 +31,26 @@ export async function addInventoryMovement({ productId, quantityChange, reason, 
   });
 }
 
-export async function createInventoryReport({ comment, counts }) {
+export async function createInventoryReport({ comment, valvevarv, counts }) {
   return transaction(async (client) => {
-    const reportResult = await client.query(
-      `INSERT INTO inventory_count_reports (comment)
-       VALUES ($1)
-       RETURNING id, created_at`,
-      [comment || null]
-    );
+    const hasValvevarv = await hasTableColumn("inventory_count_reports", "valvevarv");
+
+    let reportResult;
+    if (hasValvevarv) {
+      reportResult = await client.query(
+        `INSERT INTO inventory_count_reports (valvevarv, comment)
+         VALUES ($1, $2)
+         RETURNING id, created_at, valvevarv`,
+        [String(valvevarv || "").trim() || "Määramata", comment || null]
+      );
+    } else {
+      reportResult = await client.query(
+        `INSERT INTO inventory_count_reports (comment)
+         VALUES ($1)
+         RETURNING id, created_at`,
+        [comment || null]
+      );
+    }
 
     const report = reportResult.rows[0];
 

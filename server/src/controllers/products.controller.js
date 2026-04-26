@@ -1,4 +1,4 @@
-import { query } from "../db.js";
+import { hasTableColumn, query } from "../db.js";
 
 export async function getProducts(req, res, next) {
   try {
@@ -16,6 +16,9 @@ export async function getProducts(req, res, next) {
 
 export async function getProductMenu(req, res, next) {
   try {
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const unitSql = hasProductUnit ? "p.unit" : "'tk'::TEXT AS unit";
+
     const result = await query(
       `SELECT
          c.id AS category_id,
@@ -25,6 +28,7 @@ export async function getProductMenu(req, res, next) {
          p.id AS product_id,
          p.name AS product_name,
          p.price,
+         ${unitSql},
          p.stock_quantity,
          p.is_inventory_tracked,
          p.sort_order AS product_sort_order
@@ -54,6 +58,7 @@ export async function getProductMenu(req, res, next) {
         id: row.product_id,
         name: row.product_name,
         price: Number(row.price),
+        unit: row.unit,
         stock_quantity: row.stock_quantity,
         is_inventory_tracked: row.is_inventory_tracked,
         sort_order: row.product_sort_order
@@ -73,6 +78,7 @@ export async function createProduct(req, res, next) {
       name,
       price,
       stock_quantity = 0,
+      unit = "tk",
       is_visible = true,
       is_inventory_tracked = true,
       sort_order
@@ -83,6 +89,8 @@ export async function createProduct(req, res, next) {
     }
 
     const resolvedCategoryId = category_id ? Number(category_id) : null;
+    const normalizedUnit = ["tk", "cl"].includes(unit) ? unit : "tk";
+    const hasProductUnit = await hasTableColumn("products", "unit");
 
     let resolvedSortOrder = Number(sort_order);
     if (!Number.isInteger(resolvedSortOrder) || resolvedSortOrder <= 0) {
@@ -95,21 +103,41 @@ export async function createProduct(req, res, next) {
       resolvedSortOrder = Number(sortResult.rows[0].next_sort_order);
     }
 
-    const result = await query(
-      `INSERT INTO products
-         (category_id, name, price, stock_quantity, is_visible, is_inventory_tracked, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
-      [
-        resolvedCategoryId,
-        name,
-        Number(price),
-        Number(stock_quantity) || 0,
-        Boolean(is_visible),
-        Boolean(is_inventory_tracked),
-        resolvedSortOrder
-      ]
-    );
+    let result;
+    if (hasProductUnit) {
+      result = await query(
+        `INSERT INTO products
+           (category_id, name, price, stock_quantity, unit, is_visible, is_inventory_tracked, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING *`,
+        [
+          resolvedCategoryId,
+          name,
+          Number(price),
+          Number(stock_quantity) || 0,
+          normalizedUnit,
+          Boolean(is_visible),
+          Boolean(is_inventory_tracked),
+          resolvedSortOrder
+        ]
+      );
+    } else {
+      result = await query(
+        `INSERT INTO products
+           (category_id, name, price, stock_quantity, is_visible, is_inventory_tracked, sort_order)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         RETURNING *, 'tk'::TEXT AS unit`,
+        [
+          resolvedCategoryId,
+          name,
+          Number(price),
+          Number(stock_quantity) || 0,
+          Boolean(is_visible),
+          Boolean(is_inventory_tracked),
+          resolvedSortOrder
+        ]
+      );
+    }
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -125,6 +153,7 @@ export async function updateProduct(req, res, next) {
       name,
       price,
       stock_quantity = 0,
+      unit = "tk",
       is_visible = true,
       is_inventory_tracked = true,
       sort_order
@@ -138,29 +167,59 @@ export async function updateProduct(req, res, next) {
       sort_order === undefined || sort_order === null || sort_order === ""
         ? null
         : Number(sort_order);
+    const normalizedUnit = ["tk", "cl"].includes(unit) ? unit : "tk";
+    const hasProductUnit = await hasTableColumn("products", "unit");
 
-    const result = await query(
-      `UPDATE products
-       SET category_id = $1,
-           name = $2,
-           price = $3,
-           stock_quantity = $4,
-           is_visible = $5,
-           is_inventory_tracked = $6,
-           sort_order = COALESCE($7, sort_order)
-       WHERE id = $8
-       RETURNING *`,
-      [
-        category_id ? Number(category_id) : null,
-        name,
-        Number(price),
-        Number(stock_quantity) || 0,
-        Boolean(is_visible),
-        Boolean(is_inventory_tracked),
-        Number.isInteger(resolvedSortOrder) ? resolvedSortOrder : null,
-        id
-      ]
-    );
+    let result;
+    if (hasProductUnit) {
+      result = await query(
+        `UPDATE products
+         SET category_id = $1,
+             name = $2,
+             price = $3,
+             stock_quantity = $4,
+             unit = $5,
+             is_visible = $6,
+             is_inventory_tracked = $7,
+             sort_order = COALESCE($8, sort_order)
+         WHERE id = $9
+         RETURNING *`,
+        [
+          category_id ? Number(category_id) : null,
+          name,
+          Number(price),
+          Number(stock_quantity) || 0,
+          normalizedUnit,
+          Boolean(is_visible),
+          Boolean(is_inventory_tracked),
+          Number.isInteger(resolvedSortOrder) ? resolvedSortOrder : null,
+          id
+        ]
+      );
+    } else {
+      result = await query(
+        `UPDATE products
+         SET category_id = $1,
+             name = $2,
+             price = $3,
+             stock_quantity = $4,
+             is_visible = $5,
+             is_inventory_tracked = $6,
+             sort_order = COALESCE($7, sort_order)
+         WHERE id = $8
+         RETURNING *, 'tk'::TEXT AS unit`,
+        [
+          category_id ? Number(category_id) : null,
+          name,
+          Number(price),
+          Number(stock_quantity) || 0,
+          Boolean(is_visible),
+          Boolean(is_inventory_tracked),
+          Number.isInteger(resolvedSortOrder) ? resolvedSortOrder : null,
+          id
+        ]
+      );
+    }
 
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Product not found" });

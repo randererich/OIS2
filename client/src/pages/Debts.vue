@@ -2,32 +2,6 @@
   <section class="page debts-page">
     <h2>Võlad</h2>
 
-    <form class="form-grid" @submit.prevent="submitPayment">
-      <label>
-        Inimene
-        <select v-model="form.person_id" required>
-          <option value="">Vali inimene</option>
-          <option v-for="person in people" :key="person.id" :value="String(person.id)">
-            {{ person.first_name }} {{ person.last_name }}
-          </option>
-        </select>
-      </label>
-
-      <label>
-        Summa
-        <input v-model="form.amount" type="number" min="0.01" step="0.01" required />
-      </label>
-
-      <label>
-        Kommentaar
-        <input v-model="form.comment" />
-      </label>
-
-      <div class="actions" style="align-items: end">
-        <button type="submit" :disabled="saving">Lisa makse</button>
-      </div>
-    </form>
-
     <div class="form-grid debts-filters">
       <label>
         Otsi inimest
@@ -48,12 +22,17 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="debt in filteredDebts" :key="debt.id" class="clickable" @click="openDetail(debt)">
-            <td>{{ debt.first_name }} {{ debt.last_name }}</td>
-            <td>{{ debt.coetus || '-' }}</td>
-            <td>{{ debt.konvent || '-' }}</td>
-            <td :class="balanceClass(debt.debt)">{{ balanceMessage(debt.debt) }}</td>
-          </tr>
+          <template v-for="group in groupedDebts" :key="group.coetus">
+            <tr>
+              <th colspan="4">{{ group.coetus || 'Määramata' }}</th>
+            </tr>
+            <tr v-for="debt in group.people" :key="debt.id" class="clickable" @click="openDetail(debt)">
+              <td>{{ debt.first_name }} {{ debt.last_name }}</td>
+              <td>{{ debt.coetus || '-' }}</td>
+              <td>{{ debt.konvent || '-' }}</td>
+              <td :class="balanceClass(debt.debt)">{{ balanceMessage(debt.debt) }}</td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
@@ -105,21 +84,19 @@
               <th>Aeg</th>
               <th>Toode</th>
               <th>Kogus</th>
-              <th>Ühiku hind</th>
               <th>Kokku</th>
               <th>Kommentaar</th>
-              <th>Tühistatud</th>
+              <th>Staatus</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="purchase in monthlyPurchases" :key="purchase.id" :class="{ cancelled: purchase.is_cancelled }">
               <td>{{ formatDate(purchase.created_at) }}</td>
               <td>{{ purchase.product_name }}</td>
-              <td>{{ purchase.quantity }}</td>
-              <td>{{ money(purchase.unit_price) }}</td>
+              <td>{{ purchase.quantity }} {{ purchase.unit || 'tk' }}</td>
               <td>{{ money(purchase.total_price) }}</td>
               <td>{{ purchase.comment || '-' }}</td>
-              <td>{{ purchase.is_cancelled ? 'Jah' : 'Ei' }}</td>
+              <td>{{ purchaseStatus(purchase) }}</td>
             </tr>
           </tbody>
         </table>
@@ -129,13 +106,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { apiFetch } from "../api/client";
 
 const debts = ref([]);
-const people = ref([]);
 const error = ref("");
-const saving = ref(false);
 const search = ref("");
 
 const selectedPerson = ref(null);
@@ -143,12 +118,6 @@ const selectedMonth = ref(new Date().toISOString().slice(0, 7));
 const includeCancelled = ref(false);
 const monthlySummary = ref([]);
 const monthlyPurchases = ref([]);
-
-const form = reactive({
-  person_id: "",
-  amount: "",
-  comment: ""
-});
 
 function money(value) {
   return `${Number(value || 0).toFixed(2)} €`;
@@ -196,15 +165,72 @@ const filteredDebts = computed(() => {
   });
 });
 
+function parseCoetusParts(coetus) {
+  const raw = String(coetus || "");
+  const match = raw.match(/^(\d{4})\/(I|II)$/);
+  if (!match) {
+    return { valid: false, year: 0, sem: 0 };
+  }
+  return {
+    valid: true,
+    year: Number.parseInt(match[1], 10),
+    sem: match[2] === "II" ? 2 : 1
+  };
+}
+
+function compareCoetusDesc(a, b) {
+  const pa = parseCoetusParts(a);
+  const pb = parseCoetusParts(b);
+  if (pa.valid !== pb.valid) {
+    return pa.valid ? -1 : 1;
+  }
+  if (pa.year !== pb.year) {
+    return pb.year - pa.year;
+  }
+  if (pa.sem !== pb.sem) {
+    return pb.sem - pa.sem;
+  }
+  return String(a || "").localeCompare(String(b || ""), "et");
+}
+
+const groupedDebts = computed(() => {
+  const sorted = [...filteredDebts.value].sort((a, b) => {
+    const coetusCmp = compareCoetusDesc(a.coetus, b.coetus);
+    if (coetusCmp !== 0) {
+      return coetusCmp;
+    }
+    const debtCmp = Number(b.debt || 0) - Number(a.debt || 0);
+    if (debtCmp !== 0) {
+      return debtCmp;
+    }
+    return `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "et");
+  });
+
+  const map = new Map();
+  for (const person of sorted) {
+    const key = person.coetus || "Määramata";
+    if (!map.has(key)) {
+      map.set(key, { coetus: key, people: [] });
+    }
+    map.get(key).people.push(person);
+  }
+  return Array.from(map.values());
+});
+
+function purchaseStatus(purchase) {
+  if (purchase.is_cancelled) {
+    return "Tühistatud";
+  }
+  if (Number(purchase.quantity || 0) < 0) {
+    return "Parandus";
+  }
+  return "-";
+}
+
 async function loadData() {
   error.value = "";
   try {
-    const [debtsData, peopleData] = await Promise.all([
-      apiFetch("/payments/debts"),
-      apiFetch("/people")
-    ]);
-    debts.value = debtsData;
-    people.value = peopleData;
+    debts.value = await apiFetch("/payments/debts");
   } catch (err) {
     error.value = err.message;
   }
@@ -244,33 +270,6 @@ async function loadMonthlyDetails() {
     monthlyPurchases.value = data.purchases;
   } catch (err) {
     error.value = err.message;
-  }
-}
-
-async function submitPayment() {
-  saving.value = true;
-  error.value = "";
-  try {
-    await apiFetch("/payments", {
-      method: "POST",
-      body: JSON.stringify({
-        person_id: Number(form.person_id),
-        amount: Number(form.amount),
-        comment: form.comment || null
-      })
-    });
-
-    form.person_id = "";
-    form.amount = "";
-    form.comment = "";
-    await loadData();
-    if (selectedPerson.value) {
-      await loadMonthlyDetails();
-    }
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    saving.value = false;
   }
 }
 
