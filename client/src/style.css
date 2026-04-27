@@ -159,6 +159,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   background: var(--table-bg);
+  margin-bottom: 12px;
 }
 
 th,
