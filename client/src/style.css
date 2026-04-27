@@ -5,10 +5,20 @@
   --hover: #ececec;
   --danger: #b42020;
   --ok: #0f7d0f;
-  --menu-table-bg: rgba(255, 255, 255, 0.48);
-  --menu-header-bg: rgba(177, 160, 184, 0.228);
-  --menu-cell-bg: rgba(255, 255, 255, 0.3);
-  --menu-hover-cell-bg: rgba(214, 224, 234, 0.5);
+
+  /* Front-page menu table transparency (0 = fully transparent, 1 = fully opaque) */
+  --menu-alpha: 0.5;
+
+  /* Front-page menu table colors */
+  --menu-table-color: 255, 255, 255;
+  --menu-header-color: 177, 160, 184;
+  --menu-cell-color: 255, 255, 255;
+  --menu-hover-color: 214, 224, 234;
+
+  --menu-table-bg: rgba(var(--menu-table-color), var(--menu-alpha));
+  --menu-header-bg: rgba(var(--menu-header-color), var(--menu-alpha));
+  --menu-cell-bg: rgba(var(--menu-cell-color), calc(var(--menu-alpha) - 0.05));
+  --menu-hover-cell-bg: rgba(var(--menu-hover-color), calc(var(--menu-alpha) + 0.15));
 }
 
 * {
