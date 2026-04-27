@@ -10,7 +10,7 @@ import People from "./pages/People.vue";
 import Products from "./pages/Products.vue";
 import Purchases from "./pages/Purchases.vue";
 import Stats from "./pages/Stats.vue";
-import AdminHome from "./pages/admin/AdminHome.vue";
+import AdminPassword from "./pages/admin/AdminHome.vue";
 import AdminInventoryReports from "./pages/admin/AdminInventoryReports.vue";
 import AdminPurchases from "./pages/admin/AdminPurchases.vue";
 import Inventory from "./pages/Inventory.vue";
@@ -24,7 +24,7 @@ const routes = [
   { path: "/purchases", component: Purchases },
   { path: "/debts", component: Debts },
   { path: "/stats", component: Stats },
-  { path: "/admin", component: AdminHome, meta: { requiresAdmin: true } },
+  { path: "/admin", redirect: "/admin/products", meta: { requiresAdmin: true } },
   { path: "/admin/products", component: Products, meta: { requiresAdmin: true } },
   { path: "/admin/categories", component: AdminCategories, meta: { requiresAdmin: true } },
   { path: "/admin/people", component: People, meta: { requiresAdmin: true } },
@@ -33,7 +33,8 @@ const routes = [
   { path: "/admin/stock-add", redirect: "/admin/inventory", meta: { requiresAdmin: true } },
   { path: "/admin/inventory-count", redirect: "/admin/inventory", meta: { requiresAdmin: true } },
   { path: "/admin/inventory-reports", redirect: "/admin/inventory", meta: { requiresAdmin: true } },
-  { path: "/admin/purchases", component: AdminPurchases, meta: { requiresAdmin: true } }
+  { path: "/admin/purchases", component: AdminPurchases, meta: { requiresAdmin: true } },
+  { path: "/admin/password", component: AdminPassword, meta: { requiresAdmin: true } }
 ];
 
 const router = createRouter({
@@ -41,7 +42,11 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach(async (to) => {
+router.beforeEach(async (to, from) => {
+  if (from.meta.requiresAdmin && !to.meta.requiresAdmin) {
+    clearAdminAuth();
+  }
+
   if (!to.meta.requiresAdmin) {
     return true;
   }
