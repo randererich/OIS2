@@ -160,7 +160,7 @@ table {
   border-collapse: collapse;
   background: var(--table-bg);
   margin-bottom: 12px;
-  border-radius: 6px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
