@@ -50,6 +50,10 @@
   --table-bg: #0d0d1a;
   --th-bg: #07071a;
   --panel-bg: #0d0d1a;
+  --menu-table-color: 13, 13, 26;
+  --menu-header-color: 7, 7, 26;
+  --menu-cell-color: 13, 13, 26;
+  --menu-hover-color: 30, 30, 60;
 }
 
 * {
