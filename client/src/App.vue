@@ -1,7 +1,12 @@
 <template>
   <div class="app">
     <header>
-      <h1>Konvent POS</h1>
+      <div class="header-top">
+        <h1>Konvent POS</h1>
+        <button class="dark-toggle" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleDark">
+          {{ isDark ? '☀️' : '🌙' }}
+        </button>
+      </div>
 
       <nav v-if="!isAdminRoute">
         <RouterLink to="/">Pane kirja</RouterLink>
@@ -30,10 +35,49 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { RouterLink, RouterView } from "vue-router";
 
 const route = useRoute();
 const isAdminRoute = computed(() => route.path.startsWith("/admin"));
+
+const isDark = ref(false);
+
+function applyTheme(dark) {
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+}
+
+function toggleDark() {
+  isDark.value = !isDark.value;
+  localStorage.setItem("theme", isDark.value ? "dark" : "light");
+  applyTheme(isDark.value);
+}
+
+onMounted(() => {
+  const saved = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  isDark.value = saved ? saved === "dark" : prefersDark;
+  applyTheme(isDark.value);
+});
 </script>
+
+<style scoped>
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.dark-toggle {
+  position: absolute;
+  right: 0;
+  font-size: 1.3rem;
+  padding: 4px 8px;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  cursor: pointer;
+  line-height: 1;
+}
+</style>

@@ -5,6 +5,17 @@
   --hover: #ececec;
   --danger: #b42020;
   --ok: #0f7d0f;
+  --surface: #ffffff;
+  --surface-alt: #efefef;
+  --nav-link: #333333;
+  --input-bg: #ffffff;
+  --input-border: #a18ead;
+  --btn-bg: #f4f4f4;
+  --btn-border: #9d9d9d;
+  --btn-hover: #e7e7e7;
+  --table-bg: #ffffff;
+  --th-bg: #efefef;
+  --panel-bg: #ffffff;
 
   /* Front-page menu table transparency (0 = fully transparent, 1 = fully opaque) */
   --menu-alpha: 0.5;
@@ -21,6 +32,26 @@
   --menu-hover-cell-bg: rgba(var(--menu-hover-color), calc(var(--menu-alpha) + 0.15));
 }
 
+[data-theme="dark"] {
+  --bg: #1a1a2e;
+  --text: #e0e0e0;
+  --border: #444466;
+  --hover: #2a2a4a;
+  --danger: #e05555;
+  --ok: #4caf50;
+  --surface: #16213e;
+  --surface-alt: #0f3460;
+  --nav-link: #ccccdd;
+  --input-bg: #1e1e3a;
+  --input-border: #7a6a8a;
+  --btn-bg: #2a2a4a;
+  --btn-border: #555577;
+  --btn-hover: #3a3a5a;
+  --table-bg: #16213e;
+  --th-bg: #0f3460;
+  --panel-bg: #16213e;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -33,6 +64,13 @@ body {
     url("../bg.jpg") center / cover fixed no-repeat;
   color: var(--text);
   font-size: 18px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+[data-theme="dark"] body {
+  background:
+    linear-gradient(rgba(26, 26, 46, 0.92), rgba(26, 26, 46, 0.92)),
+    url("../bg.jpg") center / cover fixed no-repeat;
 }
 
 .app {
@@ -69,7 +107,7 @@ nav {
 }
 
 nav a {
-  color: #333;
+  color: var(--nav-link);
   text-decoration: underline;
   padding: 2px 4px;
   font-size: 1.15rem;
@@ -87,7 +125,7 @@ nav a.router-link-active {
 
 .panel {
   border: 1px solid var(--border);
-  background: #fff;
+  background: var(--panel-bg);
   padding: 10px;
 }
 
@@ -116,7 +154,7 @@ nav a.router-link-active {
 table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  background: var(--table-bg);
 }
 
 th,
@@ -129,7 +167,7 @@ td {
 }
 
 th {
-  background: #efefef;
+  background: var(--th-bg);
   text-align: center;
 }
 
@@ -145,15 +183,16 @@ tr.clickable:hover {
 }
 
 button {
-  border: 1px solid #9d9d9d;
-  background: #f4f4f4;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--text);
   padding: 8px 14px;
   cursor: pointer;
   font-size: 1.02rem;
 }
 
 button:hover:not(:disabled) {
-  background: #e7e7e7;
+  background: var(--btn-hover);
 }
 
 button:disabled {
@@ -164,8 +203,9 @@ button:disabled {
 input,
 select,
 textarea {
-  border: 1px solid #a18ead;
-  background: white;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
   padding: 8px;
   width: 100%;
   font-size: 1.02rem;
@@ -238,7 +278,7 @@ textarea {
   width: min(1200px, 96vw);
   max-height: 90vh;
   overflow: auto;
-  background: white;
+  background: var(--surface);
   border: 1px solid var(--border);
   padding: 12px;
 }
