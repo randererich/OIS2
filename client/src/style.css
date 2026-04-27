@@ -14,7 +14,9 @@
 body {
   margin: 0;
   font-family: "Georgia", "Times New Roman", serif;
-  background: var(--bg);
+  background:
+    linear-gradient(rgba(248, 248, 248, 0.82), rgba(248, 248, 248, 0.82)),
+    url("../bg.jpg") center / cover fixed no-repeat;
   color: var(--text);
   font-size: 18px;
 }
@@ -132,7 +134,7 @@ button:disabled {
 input,
 select,
 textarea {
-  border: 1px solid #a9a9a9;
+  border: 1px solid #a18ead;
   background: white;
   padding: 8px;
   width: 100%;
@@ -180,7 +182,7 @@ textarea {
 }
 
 .balance-debt {
-  color: #b42020;
+  color: #b03131;
 }
 
 .balance-credit {

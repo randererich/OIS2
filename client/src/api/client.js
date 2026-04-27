@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const REGULAR_AUTH_COOKIE = "konvent_pos_auth";
 const REGULAR_AUTH_TTL_SECONDS = 30 * 60;
@@ -164,33 +164,38 @@ async function readOrPromptAdminAuth() {
 }
 
 async function doFetch(path, options = {}, getAuth, onUnauthorized) {
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: await getAuth(),
-    ...(options.headers || {})
-  };
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: await getAuth(),
+      ...(options.headers || {})
+    };
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers
-  });
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers
+    });
 
-  if (response.status === 401) {
-    onUnauthorized();
-    throw new Error("Authentication failed. Please try again.");
+    if (response.status === 401) {
+      onUnauthorized();
+      if (attempt === 0) {
+        continue;
+      }
+      throw new Error("Authentication failed. Please try again.");
+    }
+
+    if (response.status === 204) {
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Request failed");
+    }
+
+    return data;
   }
-
-  if (response.status === 204) {
-    return null;
-  }
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || "Request failed");
-  }
-
-  return data;
 }
 
 export function apiFetch(path, options = {}) {

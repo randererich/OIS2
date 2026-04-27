@@ -10,6 +10,42 @@ services:
       - "5433:5432"
     volumes:
       - konvent_pos_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U konvent -d konvent_pos"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: ./server
+    container_name: konvent-pos-server
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgresql://konvent:konvent@db:5432/konvent_pos
+      APP_USERNAME: konvent
+      APP_PASSWORD: MirtelPohlaTissid
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin
+      CLIENT_ORIGIN: http://localhost:5173
+      CLIENT_ORIGINS: http://localhost:5173,http://ois2.tartu.vironia.ee:5173,http://ois2.tartu.vironia.ee,https://ois2.tartu.vironia.ee
+    depends_on:
+      db:
+        condition: service_healthy
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_BASE: /api
+    container_name: konvent-pos-client
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE: /api
+    depends_on:
+      - server
 
 volumes:
   konvent_pos_data:

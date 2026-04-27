@@ -26,7 +26,6 @@
             <tr>
               <th>Nimi</th>
               <th>Konvent</th>
-              <th>Saldo</th>
             </tr>
           </thead>
           <tbody>
@@ -38,7 +37,6 @@
             >
               <td style="text-align: center">{{ person.first_name }} {{ person.last_name }}</td>
               <td style="text-align: center">{{ person.konvent || '-' }}</td>
-              <td :class="balanceClass(person.balance)" style="text-align: center">{{ balanceMessage(person.balance) }}</td>
             </tr>
           </tbody>
         </table>
@@ -121,28 +119,6 @@ function compareCoetusDesc(a, b) {
     return pb.sem - pa.sem;
   }
   return String(a || "").localeCompare(String(b || ""), "et");
-}
-
-function balanceMessage(balance) {
-  const n = Number(balance || 0);
-  if (n > 0) {
-    return `Praegune võlg: ${money(n)}`;
-  }
-  if (n < 0) {
-    return `Kontol üle: ${money(Math.abs(n))}`;
-  }
-  return "Võlg puudub";
-}
-
-function balanceClass(balance) {
-  const n = Number(balance || 0);
-  if (n > 0) {
-    return "balance-debt";
-  }
-  if (n < 0) {
-    return "balance-credit";
-  }
-  return "balance-zero";
 }
 
 const filteredPeople = computed(() => {

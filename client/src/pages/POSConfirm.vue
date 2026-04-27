@@ -4,7 +4,7 @@
 
     <template v-if="successBalance">
       <p class="success confirm-success-title">Ost salvestatud.</p>
-      <p class="confirm-balance" :class="balanceClass(successBalance.balance)">
+      <p class="confirm-balance">
         {{ successBalance.first_name }} {{ successBalance.last_name }} -
         <strong>{{ balanceMessage(successBalance.balance) }}</strong>
       </p>
@@ -66,17 +66,6 @@ function balanceMessage(balance) {
     return "Võlg puudub";
   }
   return `Kontol üle: ${money(Math.abs(n))}`;
-}
-
-function balanceClass(balance) {
-  const n = Number(balance || 0);
-  if (n > 0) {
-    return "balance-debt";
-  }
-  if (n < 0) {
-    return "balance-credit";
-  }
-  return "balance-zero";
 }
 
 function goHome() {
@@ -174,7 +163,8 @@ onUnmounted(() => {
 }
 
 .confirm-balance {
-  font-size: 1.8rem;
+  color: #1b1b1b;
+  font-size: 1.2rem;
   text-align: center;
 }
 
@@ -184,15 +174,4 @@ onUnmounted(() => {
   padding: 12px 20px;
 }
 
-.balance-debt {
-  color: #b42020;
-}
-
-.balance-credit {
-  color: #0f7d0f;
-}
-
-.balance-zero {
-  color: #1b1b1b;
-}
 </style>
