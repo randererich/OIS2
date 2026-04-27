@@ -5,6 +5,10 @@
   --hover: #ececec;
   --danger: #b42020;
   --ok: #0f7d0f;
+  --menu-table-bg: rgba(255, 255, 255, 0.48);
+  --menu-header-bg: rgba(149, 16, 197, 0.56);
+  --menu-cell-bg: rgba(255, 255, 255, 0.3);
+  --menu-hover-cell-bg: rgba(214, 224, 234, 0.5);
 }
 
 * {
@@ -84,19 +88,19 @@ nav a.router-link-active {
 }
 
 .menu-columns table {
-  background: rgba(255, 255, 255, 0.58);
+  background: var(--menu-table-bg);
 }
 
 .menu-columns th {
-  background: rgba(239, 239, 239, 0.6);
+  background: var(--menu-header-bg);
 }
 
 .menu-columns td {
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--menu-cell-bg);
 }
 
 .menu-columns tr.clickable:hover td {
-  background: rgba(236, 236, 236, 0.6);
+  background: var(--menu-hover-cell-bg);
 }
 
 table {
