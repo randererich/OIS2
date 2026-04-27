@@ -56,8 +56,7 @@ function toggleDark() {
 
 onMounted(() => {
   const saved = localStorage.getItem("theme");
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  isDark.value = saved ? saved === "dark" : prefersDark;
+  isDark.value = saved === "dark";
   applyTheme(isDark.value);
 });
 </script>
