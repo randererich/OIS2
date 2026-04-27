@@ -157,7 +157,8 @@ nav a.router-link-active {
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background: var(--table-bg);
   margin-bottom: 12px;
   border-radius: 12px;
