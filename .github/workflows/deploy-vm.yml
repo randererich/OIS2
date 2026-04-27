@@ -1,0 +1,52 @@
+name: Deploy to VM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vm
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key and known_hosts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.VM_PORT || 22 }}" -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Sync files to VM
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            -e "ssh -p ${{ secrets.VM_PORT || 22 }}" \
+            ./ "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/home/debian/OIS2/"
+
+      - name: Restart services with Docker Compose
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -p "${{ secrets.VM_PORT || 22 }}" "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}" << 'EOF'
+          set -euo pipefail
+          cd /home/debian/OIS2
+          docker compose down || true
+          docker compose up -d --build
+          EOF
