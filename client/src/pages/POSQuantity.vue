@@ -12,7 +12,7 @@
 
     <label class="pos-quantity-input-wrap">
       Kogus
-      <input class="pos-quantity-input" v-model="inputValue" inputmode="text" />
+      <input ref="quantityInput" class="pos-quantity-input" v-model="inputValue" inputmode="text" />
     </label>
 
     <NumberPad
@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import NumberPad from "../components/NumberPad.vue";
 import { usePosStore } from "../stores/posStore";
@@ -39,6 +39,7 @@ import { usePosStore } from "../stores/posStore";
 const router = useRouter();
 const posStore = usePosStore();
 const inputValue = ref("1");
+const quantityInput = ref(null);
 const isDefaultEntry = ref(true);
 const error = ref("");
 
@@ -127,6 +128,49 @@ function nextStep() {
   router.push("/person");
 }
 
+function goBack() {
+  router.push("/");
+}
+
+function handleKeydown(event) {
+  if (event.isComposing) {
+    return;
+  }
+
+  if (event.ctrlKey || event.metaKey || event.altKey) {
+    return;
+  }
+
+  if (/^\d$/.test(event.key)) {
+    event.preventDefault();
+    append(event.key);
+    return;
+  }
+
+  if (event.key === "Backspace") {
+    event.preventDefault();
+    backspace();
+    return;
+  }
+
+  if (event.key === "-") {
+    event.preventDefault();
+    toggleSign();
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    goBack();
+    return;
+  }
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    nextStep();
+  }
+}
+
 onMounted(() => {
   if (!posStore.product) {
     router.replace("/");
@@ -134,6 +178,17 @@ onMounted(() => {
   }
 
   resetDefaultEntry();
+
+  nextTick(() => {
+    quantityInput.value?.focus();
+    quantityInput.value?.select();
+  });
+
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
 });
 
 // Normalize manual keyboard edits and preserve the "replace first number" behavior.

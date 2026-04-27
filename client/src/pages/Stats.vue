@@ -6,16 +6,8 @@
       <label>
         Statistika liik
         <select v-model="statType" @change="loadStats">
-          <option value="top-spenders">Top 20 kulutajad</option>
-          <option value="top-item-counts">Top 20 ostjad koguse jargi</option>
-          <option value="top-products-by-quantity">Top 20 enim ostetud tooted</option>
-          <option value="top-products-by-revenue">Top 20 toodet kaibe jargi</option>
-          <option value="product-buyers">Top 20 valitud toote ostjad</option>
-          <option value="category-buyers">Top 20 valitud kategooria ostjad</option>
-          <option value="month-top-spenders">Top 20 kulutajad kuus</option>
-          <option value="month-top-products">Top 20 tooted kuus</option>
-          <option value="highest-debts">Top 20 koige suurem volg</option>
-          <option value="highest-credits">Top 20 koige suurem krediit</option>
+          <option value="category-buyers">Top 20 ostjat kategoorias</option>
+          <option value="product-buyers">Top 20 ostjat toote kaupa</option>
         </select>
       </label>
 
@@ -37,21 +29,6 @@
             {{ category.name }}
           </option>
         </select>
-      </label>
-
-      <label v-if="needsMonth">
-        Kuu
-        <input type="month" v-model="selectedMonth" @change="loadStats" />
-      </label>
-
-      <label v-if="supportsDateRange">
-        Alates
-        <input type="date" v-model="dateFrom" @change="loadStats" />
-      </label>
-
-      <label v-if="supportsDateRange">
-        Kuni
-        <input type="date" v-model="dateTo" @change="loadStats" />
       </label>
     </div>
 
@@ -79,12 +56,9 @@
 import { computed, onMounted, ref } from "vue";
 import { apiFetch } from "../api/client";
 
-const statType = ref("top-spenders");
+const statType = ref("category-buyers");
 const selectedProductId = ref("");
 const selectedCategoryId = ref("");
-const selectedMonth = ref(new Date().toISOString().slice(0, 7));
-const dateFrom = ref("");
-const dateTo = ref("");
 
 const loading = ref(false);
 const error = ref("");
@@ -94,22 +68,10 @@ const categories = ref([]);
 
 const needsProduct = computed(() => statType.value === "product-buyers");
 const needsCategory = computed(() => statType.value === "category-buyers");
-const needsMonth = computed(() => statType.value === "month-top-spenders" || statType.value === "month-top-products");
-const supportsDateRange = computed(
-  () => !needsMonth.value && statType.value !== "highest-debts" && statType.value !== "highest-credits"
-);
 
 const labels = {
-  "top-spenders": "Top 20 kulutajad",
-  "top-item-counts": "Top 20 ostjad koguse jargi",
-  "top-products-by-quantity": "Top 20 enim ostetud tooted",
-  "top-products-by-revenue": "Top 20 toodet kaibe jargi",
-  "product-buyers": "Top 20 valitud toote ostjad",
-  "category-buyers": "Top 20 valitud kategooria ostjad",
-  "month-top-spenders": "Top 20 kulutajad valitud kuus",
-  "month-top-products": "Top 20 tooted valitud kuus",
-  "highest-debts": "Top 20 koige suurem volg",
-  "highest-credits": "Top 20 koige suurem krediit"
+  "category-buyers": "Top 20 ostjat valitud kategoorias",
+  "product-buyers": "Top 20 ostjat valitud tootel"
 };
 
 const statLabel = computed(() => labels[statType.value]);
@@ -151,56 +113,22 @@ function formatCell(column, value, row) {
 
 function buildEndpoint() {
   const limit = "20";
-  const rangeParams = new URLSearchParams();
 
-  if (dateFrom.value) {
-    rangeParams.set("date_from", dateFrom.value);
-  }
-  if (dateTo.value) {
-    rangeParams.set("date_to", dateTo.value);
-  }
-
-  function withRange(path) {
-    if (!supportsDateRange.value || !rangeParams.toString()) {
-      return path;
-    }
-    return `${path}&${rangeParams.toString()}`;
-  }
-
-  if (statType.value === "top-spenders") {
-    return withRange(`/stats/top-spenders?limit=${limit}`);
-  }
-  if (statType.value === "top-item-counts") {
-    return withRange(`/stats/top-item-counts?limit=${limit}`);
-  }
-  if (statType.value === "top-products-by-quantity") {
-    return withRange(`/stats/top-products-by-quantity?limit=${limit}`);
-  }
-  if (statType.value === "top-products-by-revenue") {
-    return withRange(`/stats/top-products-by-revenue?limit=${limit}`);
-  }
   if (statType.value === "product-buyers") {
     if (!selectedProductId.value) {
       return null;
     }
-    return withRange(`/stats/product/${selectedProductId.value}/buyers?limit=${limit}`);
+    return `/stats/product/${selectedProductId.value}/buyers?limit=${limit}`;
   }
+
   if (statType.value === "category-buyers") {
     if (!selectedCategoryId.value) {
       return null;
     }
-    return withRange(`/stats/category/${selectedCategoryId.value}/buyers?limit=${limit}`);
+    return `/stats/category/${selectedCategoryId.value}/buyers?limit=${limit}`;
   }
-  if (statType.value === "month-top-spenders") {
-    return `/stats/month/top-spenders?month=${selectedMonth.value}&limit=${limit}`;
-  }
-  if (statType.value === "month-top-products") {
-    return `/stats/month/top-products?month=${selectedMonth.value}&limit=${limit}`;
-  }
-  if (statType.value === "highest-debts") {
-    return `/stats/highest-debts?limit=${limit}`;
-  }
-  return `/stats/highest-credits?limit=${limit}`;
+
+  return null;
 }
 
 async function loadStats() {

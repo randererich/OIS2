@@ -3,6 +3,11 @@
     <h2>Inventuur</h2>
 
     <label>
+      Valvevärv
+      <input v-model="valvevarv" required />
+    </label>
+
+    <label>
       Raporti kommentaar
       <input v-model="reportComment" />
     </label>
@@ -46,6 +51,7 @@ import { apiFetchAdmin } from "../../api/client";
 const products = ref([]);
 const counted = reactive({});
 const comments = reactive({});
+const valvevarv = ref("");
 const reportComment = ref("");
 const message = ref("");
 const error = ref("");
@@ -67,6 +73,11 @@ async function saveReport() {
   error.value = "";
   message.value = "";
 
+  if (!String(valvevarv.value || "").trim()) {
+    error.value = "Valvevärv on kohustuslik.";
+    return;
+  }
+
   const counts = [];
 
   for (const product of products.value) {
@@ -87,12 +98,14 @@ async function saveReport() {
     const result = await apiFetchAdmin("/admin/inventory/reports", {
       method: "POST",
       body: JSON.stringify({
+        valvevarv: valvevarv.value.trim(),
         comment: reportComment.value || null,
         counts
       })
     });
 
     message.value = `Raport #${result.report_id} salvestatud (${result.counts_saved} rida).`;
+    valvevarv.value = "";
     await loadProducts();
   } catch (err) {
     error.value = err.message;

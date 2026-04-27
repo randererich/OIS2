@@ -12,7 +12,7 @@
 
     <label>
       Otsi nime
-      <input v-model="search" placeholder="Sisesta nimi" />
+      <input ref="searchInput" v-model="search" placeholder="Sisesta nimi" autofocus />
     </label>
 
     <p v-if="loading">Laen inimesi...</p>
@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { apiFetch } from "../api/client";
 import { usePosStore } from "../stores/posStore";
@@ -83,6 +83,7 @@ const router = useRouter();
 const posStore = usePosStore();
 
 const search = ref("");
+const searchInput = ref(null);
 const people = ref([]);
 const recentBuyers = ref([]);
 const loading = ref(false);
@@ -151,8 +152,12 @@ const filteredPeople = computed(() => {
   }
 
   return people.value.filter((person) => {
+    const firstName = String(person.first_name || "").toLowerCase();
+    const lastName = String(person.last_name || "").toLowerCase();
     const fullName = `${person.first_name} ${person.last_name}`.toLowerCase();
     return (
+      firstName.includes(term) ||
+      lastName.includes(term) ||
       fullName.includes(term) ||
       String(person.coetus || "").toLowerCase().includes(term) ||
       String(person.konvent || "").toLowerCase().includes(term)
@@ -210,11 +215,49 @@ function selectPerson(person) {
   router.push("/confirm");
 }
 
+function goBack() {
+  router.push("/quantity");
+}
+
+function selectFirstFilteredPerson() {
+  const first = filteredPeople.value[0];
+  if (first) {
+    selectPerson(first);
+  }
+}
+
+function handleKeydown(event) {
+  if (event.isComposing) {
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    goBack();
+    return;
+  }
+
+  if (event.key === "Enter") {
+    event.preventDefault();
+    selectFirstFilteredPerson();
+  }
+}
+
 onMounted(() => {
   if (!posStore.product) {
     router.replace("/");
     return;
   }
+
+  nextTick(() => {
+    searchInput.value?.focus();
+  });
+
+  window.addEventListener("keydown", handleKeydown);
   loadPeople();
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
 });
 </script>

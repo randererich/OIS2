@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { apiFetch } from "../api/client";
 import { usePosStore } from "../stores/posStore";
@@ -114,10 +114,56 @@ async function submit() {
   }
 }
 
+function goBack() {
+  if (successBalance.value) {
+    goHome();
+    return;
+  }
+  router.push("/person");
+}
+
+function handleEnter() {
+  if (successBalance.value) {
+    goHome();
+    return;
+  }
+  if (!saving.value) {
+    submit();
+  }
+}
+
+function handleKeydown(event) {
+  if (event.isComposing) {
+    return;
+  }
+
+  if (event.key === "Escape") {
+    event.preventDefault();
+    goBack();
+    return;
+  }
+
+  if (event.key === "Enter") {
+    const target = event.target;
+    if (target instanceof HTMLTextAreaElement) {
+      return;
+    }
+    event.preventDefault();
+    handleEnter();
+  }
+}
+
 onMounted(() => {
   if (!posStore.product || !posStore.person) {
     router.replace("/");
+    return;
   }
+
+  window.addEventListener("keydown", handleKeydown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", handleKeydown);
 });
 </script>
 
