@@ -84,15 +84,19 @@ nav a.router-link-active {
 }
 
 .menu-columns table {
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.58);
 }
 
 .menu-columns th {
-  background: rgba(239, 239, 239, 0.82);
+  background: rgba(239, 239, 239, 0.6);
 }
 
 .menu-columns td {
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.menu-columns tr.clickable:hover td {
+  background: rgba(236, 236, 236, 0.6);
 }
 
 table {
