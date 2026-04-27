@@ -37,3 +37,17 @@ function money(value) {
   return `${Number(value).toFixed(2)} €`;
 }
 </script>
+
+<style scoped>
+table {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+th {
+  background: rgba(239, 239, 239, 0.82);
+}
+
+td {
+  background: rgba(255, 255, 255, 0.62);
+}
+</style>

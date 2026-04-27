@@ -83,6 +83,18 @@ nav a.router-link-active {
   gap: 12px;
 }
 
+.menu-columns table {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.menu-columns th {
+  background: rgba(239, 239, 239, 0.82);
+}
+
+.menu-columns td {
+  background: rgba(255, 255, 255, 0.62);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
