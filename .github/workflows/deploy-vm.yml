@@ -91,6 +91,6 @@ jobs:
           set -a
           . ./.env
           set +a
-          docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v db_user="$POSTGRES_USER" -v db_pass="$POSTGRES_PASSWORD" -c "DO \\$do\\$ BEGIN EXECUTE format('ALTER ROLE %I WITH PASSWORD %L', :'db_user', :'db_pass'); END \\$do\\$;"
+          docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ALTER ROLE \"$POSTGRES_USER\" WITH PASSWORD '$POSTGRES_PASSWORD';"
           docker compose up -d --build
           EOF
