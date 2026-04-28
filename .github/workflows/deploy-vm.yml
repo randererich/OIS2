@@ -91,6 +91,8 @@ jobs:
           set -a
           . ./.env
           set +a
-          docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ALTER ROLE \"$POSTGRES_USER\" WITH PASSWORD '$POSTGRES_PASSWORD';"
+          if ! docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "ALTER ROLE \"$POSTGRES_USER\" WITH PASSWORD '$POSTGRES_PASSWORD';"; then
+            echo "Warning: could not sync DB role password automatically; continuing with service startup."
+          fi
           docker compose up -d --build
           EOF
