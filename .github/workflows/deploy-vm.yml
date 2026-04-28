@@ -86,5 +86,11 @@ jobs:
           set -euo pipefail
           cd /home/debian/OIS2
           docker compose down || true
+          # Start DB first so we can sync role password with current .env secrets.
+          docker compose up -d db
+          set -a
+          . ./.env
+          set +a
+          docker compose exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v user="$POSTGRES_USER" -v pass="$POSTGRES_PASSWORD" -c "ALTER USER :\"user\" WITH PASSWORD :'pass';"
           docker compose up -d --build
           EOF
