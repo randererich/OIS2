@@ -81,9 +81,9 @@ async function saveReport() {
   const counts = [];
 
   for (const product of products.value) {
-    const value = Number.parseInt(counted[product.id], 10);
-    if (!Number.isInteger(value)) {
-      error.value = `Loetud seis peab olema taisarv (${product.name})`;
+    const value = Number(counted[product.id]);
+    if (!Number.isFinite(value)) {
+      error.value = `Loetud seis peab olema number (${product.name})`;
       return;
     }
 

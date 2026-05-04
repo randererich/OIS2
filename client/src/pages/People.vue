@@ -42,7 +42,6 @@
           <th>Coetus</th>
           <th>Konvent</th>
           <th>Nahtav</th>
-          <th>Jarjekord</th>
           <th>Tegevus</th>
         </tr>
       </thead>
@@ -52,7 +51,6 @@
           <td>{{ person.coetus || '-' }}</td>
           <td>{{ person.konvent || '-' }}</td>
           <td>{{ person.is_visible ? 'Jah' : 'Ei' }}</td>
-          <td>{{ person.sort_order }}</td>
           <td>
             <div class="actions">
               <button type="button" @click="editPerson(person)">Edit</button>

@@ -148,7 +148,7 @@ async function saveProduct() {
     category_id: form.category_id ? Number(form.category_id) : null,
     name: form.name,
     price: Number(form.price),
-    stock_quantity: Number.parseInt(form.stock_quantity, 10),
+    stock_quantity: Number(form.stock_quantity),
     unit: form.unit,
     is_visible: Boolean(form.is_visible),
     is_inventory_tracked: Boolean(form.is_inventory_tracked)

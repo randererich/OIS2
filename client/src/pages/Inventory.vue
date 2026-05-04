@@ -113,7 +113,7 @@ const summary = computed(() => {
     0
   );
   const totalCounted = products.value.reduce(
-    (sum, product) => sum + Number.parseInt(String(counted[product.id] || "0"), 10),
+    (sum, product) => sum + Number(counted[product.id] || "0"),
     0
   );
 
@@ -148,7 +148,7 @@ async function loadCountProducts() {
 
 function rowClass(product) {
   const expected = Number(product.expected_quantity || 0);
-  const countedValue = Number.parseInt(String(counted[product.id] || "0"), 10);
+  const countedValue = Number(counted[product.id] || "0");
   if (!Number.isFinite(countedValue)) {
     return "";
   }
@@ -167,9 +167,9 @@ async function saveReport() {
   const counts = [];
 
   for (const product of products.value) {
-    const value = Number.parseInt(counted[product.id], 10);
-    if (!Number.isInteger(value)) {
-      error.value = `Loetud seis peab olema täisarv (${product.name})`;
+    const value = Number(counted[product.id]);
+    if (!Number.isFinite(value)) {
+      error.value = `Loetud seis peab olema number (${product.name})`;
       return;
     }
 

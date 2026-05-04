@@ -62,7 +62,7 @@ async function submit() {
       method: "POST",
       body: JSON.stringify({
         product_id: Number(form.product_id),
-        quantity_change: Number.parseInt(form.quantity_change, 10),
+        quantity_change: Number(form.quantity_change),
         reason: "stock_add",
         comment: form.comment || null
       })

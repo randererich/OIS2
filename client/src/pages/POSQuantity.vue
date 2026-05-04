@@ -50,12 +50,17 @@ function sanitizeRawInput(raw) {
   }
 
   const negative = trimmed.startsWith("-");
-  const digits = trimmed.replace(/[^\d]/g, "");
-  if (!digits) {
+  const cleaned = trimmed.replace(/^-/, "").replace(/[^\d.]/g, "");
+  
+  // Remove all but the first decimal point
+  const parts = cleaned.split(".");
+  const sanitized = parts[0] + (parts.length > 1 ? "." + parts.slice(1).join("").replace(/\./g, "") : "");
+  
+  if (!sanitized || sanitized === ".") {
     return negative ? "-" : "";
   }
 
-  const normalized = String(Number.parseInt(digits, 10));
+  const normalized = String(Number(sanitized));
   return negative ? `-${normalized}` : normalized;
 }
 
@@ -71,17 +76,29 @@ function money(value) {
 }
 
 function append(char) {
-  if (!/^\d$/.test(char)) {
+  // Allow digits and decimal point
+  if (!/^[\d.]$/.test(char)) {
+    return;
+  }
+
+  // Don't allow decimal point if already present
+  if (char === "." && inputValue.value.includes(".")) {
     return;
   }
 
   if (isDefaultEntry.value) {
-    inputValue.value = char;
+    inputValue.value = char === "." ? "0." : char;
     isDefaultEntry.value = false;
     return;
   }
 
-  inputValue.value = inputValue.value === "0" ? char : inputValue.value + char;
+  // If trying to add decimal after a minus sign or at start, add 0 first
+  if (char === "." && (inputValue.value === "-" || inputValue.value === "")) {
+    inputValue.value = inputValue.value + "0.";
+    return;
+  }
+
+  inputValue.value = inputValue.value === "0" && char !== "." ? char : inputValue.value + char;
 }
 
 function toggleSign() {
@@ -92,7 +109,7 @@ function toggleSign() {
   }
 
   const normalized = sanitizeRawInput(inputValue.value);
-  if (!normalized || normalized === "0") {
+  if (!normalized || normalized === "0" || normalized === "0.0") {
     inputValue.value = "1";
     isDefaultEntry.value = true;
     return;
@@ -118,8 +135,8 @@ function backspace() {
 
 function nextStep() {
   error.value = "";
-  const quantity = Number.parseInt(sanitizeRawInput(inputValue.value), 10);
-  if (!Number.isInteger(quantity) || quantity === 0) {
+  const quantity = Number(sanitizeRawInput(inputValue.value));
+  if (!Number.isFinite(quantity) || quantity === 0) {
     error.value = "Palun sisesta korrektne kogus (mitte 0).";
     return;
   }
@@ -144,6 +161,12 @@ function handleKeydown(event) {
   if (/^\d$/.test(event.key)) {
     event.preventDefault();
     append(event.key);
+    return;
+  }
+
+  if (event.key === ".") {
+    event.preventDefault();
+    append(".");
     return;
   }
 

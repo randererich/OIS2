@@ -5,6 +5,7 @@
     </button>
     <button type="button" class="number-pad-sign" @click="$emit('toggle-sign')">+/-</button>
     <button type="button" @click="$emit('input', '0')">0</button>
+    <button type="button" @click="$emit('input', '.')">.</button>
     <button type="button" @click="$emit('backspace')">←</button>
   </div>
 </template>

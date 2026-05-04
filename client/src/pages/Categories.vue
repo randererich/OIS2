@@ -30,7 +30,6 @@
         <tr>
           <th>Nimi</th>
           <th>Emoji</th>
-          <th>Jarjekord</th>
           <th>Nahtav</th>
           <th>Tegevus</th>
         </tr>
@@ -39,7 +38,6 @@
         <tr v-for="category in categories" :key="category.id">
           <td>{{ category.name }}</td>
           <td>{{ category.emoji || '-' }}</td>
-          <td>{{ category.sort_order }}</td>
           <td>{{ category.is_visible ? 'Jah' : 'Ei' }}</td>
           <td>
             <div class="actions">

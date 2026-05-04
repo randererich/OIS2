@@ -176,7 +176,7 @@ async function submitStockAdd() {
       method: "POST",
       body: JSON.stringify({
         product_id: Number(stockAdd.value.product_id),
-        quantity_change: Number.parseInt(stockAdd.value.quantity_change, 10),
+        quantity_change: Number(stockAdd.value.quantity_change),
         reason: "stock_add",
         comment: stockAdd.value.comment || null
       })
