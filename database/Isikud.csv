@@ -1,0 +1,394 @@
+isik,eesnimi,perenimi,email,konvent,coetus
+0,ÕIS,,,Tartu,1900/II
+1,Kalle,Ahi,kalkar@ut.ee,Tartu,1994/II
+2,Gaspar,Anton,gaspar.anton@one.ee,Vilistlaskogu,2005/II
+3,Priit,Anton,priit.anton@vironia.ee,Vilistlaskogu,2000/I
+4,Martin,Aule,martin@vironia.ee,Tartu,2006/I
+5,Adrian,Bachmann,wittgenstein@hot.ee,Tartu,2003/II
+6,Siim,Boikov,siim.boikov@gmail.com,Vilistlaskogu,2003/II
+7,Taavi,Eenlo,choci@hot.ee,Tartu,2006/I
+8,Allan,Eesmaa,Allan.Eesmaa@gmail.com,Tartu,2004/I
+10,Meelis,Hint,meelishint@hotmail.com,Vilistlaskogu,2000/I
+11,Erkki,Jõgi,erkki.jogi@emu.ee,Tartu,2006/II
+12,Mikk,Johanson,svinks16@hotmail.com,Tartu,2007/II
+13,Martin,Kahu,vironus@gmail.com,Tartu,2002/I
+14,Andres,Kaljurand,yellowland@hot.ee,Tartu,1999/I
+15,Ove,Kangur,ovekangur@hotmail.com,Tallinn,2005/II
+16,Harry,Kartau,harry.kartau@mail.ee,Tartu,1997/II
+17,Villu,Kasari,vkasari@hot.ee,Vilistlaskogu,2003/I
+18,Denes,Kattago,denesk@yahoo.com,Tallinn,2001/I
+19,Mait,Kaup,mait.kaup@gmail.com,Tartu,2005/I
+20,Mart,Keerutaja,keerutaja@gmail.com,Tartu,1994/I
+21,Lennart,Kitt,lennart.kitt@gmail.com,Vilistlaskogu,2003/II
+22,Rasmus,Koorits,rkoorits@hot.ee,Tartu,2007/II
+23,Alari,Kruusvall,alari.kruusvall@raasiku.ee,Vilistlaskogu,2000/I
+24,Riho,Kägo,riho1000@hot.ee,Vilistlaskogu,2004/II
+25,Tõnis,Kärdi,nodzu@ut.ee,Vilistlaskogu,2001/I
+26,Hannes,Lehemets,haziz@ut.ee,Vilistlaskogu,2001/II
+27,Meelis,Lehtmets,meelis@lehtmets.com,Tartu,2006/II
+28,Mihkel,Lendok,mlendok@ut.ee,Tartu,2006/I
+31,Priido,Linntam,thepriido@hotmail.com,Tartu,2007/I
+32,Andres,Lust,kingpool@ut.ee,Tartu,2005/II
+33,Mikk,Mathisen,mikkmathisen@hot.ee,Tartu,2007/I
+34,Indrek,Mettus,thehadding@gmail.com,Tartu,2002/I
+35,Tarmo,Mölder,tarmo.molder@hotmail.com,Tartu,2000/I
+36,Ahti,Noor,ahti.noor@gmail.com,Vilistlaskogu,2005/I
+39,Andrus,Oll,Andrus.Oll@mail.ee,Tartu,1998/II
+40,Ander,Olvik,ander.olvik@mail.ee,Tartu,2005/II
+41,Janek,Paloveer,janekp@hot.ee,Vilistlaskogu,2001/I
+42,Urmet,Paloveer,urmet.paloveer@ut.ee,Vilistlaskogu,2000/I
+44,Peeter,Papstel,papstel@gmail.com,Tartu,2001/I
+45,Peeter,Piksarv,peeter@vironia.ee,Tartu,2004/II
+46,Lauri,Plutus,listikirjad@gmail.com,Tartu,2000/II
+47,Daniel,Haab,daniel@vironia.ee,Vilistlaskogu,2002/II
+50,Heiki,Raadik,Heiki.Raadik@hansa.ee,Tartu,1994/II
+51,Tarmo,Rasmann,tarmo.rasmann@vironia.ee,Tartu,2005/II
+53,Mart,Redi,martredi@gmail.com,Vilistlaskogu,2001/II
+54,Ronald,Riistan,riistan@gmail.com,Tartu,2006/II
+55,Henn,Runnel,henn@krabi.ee,Vilistlaskogu,2004/I
+56,Tõnu,Runnel,tonu@krabi.ee,Vilistlaskogu,2000/II
+57,Toomas,Runnel,toomas.runnel@vironia.ee,Tartu,2006/II
+58,Tõnis,Rüütel,raatuse@ut.ee,Vilistlaskogu,2006/II
+59,Toomas,Römer,toomasr@gmail.com,Vilistlaskogu,2004/II
+60,Heiki,Salm,heikisalm@hot.ee,Tartu,2006/II
+61,Gert,Schultz,gertsch@hot.ee,Tartu,1998/I
+62,Marko,Siitas,anti.loop.007@mail.ee,Vilistlaskogu,2000/II
+63,Sander,Sirel,sander86@ut.ee,Tartu,2006/II
+65,Oliver,Tamm,muliver@gmail.com,Tartu,1999/I
+66,Silver,Tamm,silver.tamm@gmail.com,Tartu,2005/II
+67,Paul,Tammo,paul@vironia.ee,Tartu,2002/II
+68,Mihkel,Truman,mihkeltrumanenator@gmail.com,Tartu,2003/II
+69,Indrek,Tääts,arvet@piksel.ee,Vilistlaskogu,1995/II
+70,Mihkel,Vaasa,waasa@hot.ee,Tartu,2005/II
+71,Rainer,Vabamäe,vabamae@gmail.com,Vilistlaskogu,2004/I
+74,Toomas,Ventsli,toomas.ventsli@antsmae.ee,Vilistlaskogu,2001/I
+75,Vahur,Verte,vahur106@ut.ee,Vilistlaskogu,2006/II
+76,Oliver,Vilson,olivervilson@hot.ee,Tartu,2007/I
+77,Kaupo,Voormansik,kaupov@gmail.com,Tartu,2004/I
+78,Madis,Vunder,Madis.Vunder@curia.eu.int,Tartu,1990/II
+79,Veiko,Värk,,Vilistlaskogu,2000/I
+80,Jaan,Eensaar,jaaneen@ut.ee,Vilistlaskogu,1998/I
+81,Aitel,Käpp,aitel@ut.ee,Vilistlaskogu,2001/I
+82,Tarmo,Loorand,tarmo.loorand@mail.ee,Vilistlaskogu,1999/I
+83,Andres,Mikli,Andres.Mikli@mail.ee,Vilistlaskogu,1998/I
+85,Andres,Sildam,andres@anobion.ee,Vilistlaskogu,1990/II
+86,Erki,Kivistik,erki.kivistik@curia.eu.int,Tallinn,2001/I
+88,Jorgan,Vöörmann,jorgan83@gmail.com,Tallinn,2005/II
+90,Sula,Raha,okonoom.tartu@vironia.ee,pseudo,3000/I
+91,Parandused,,,pseudo,3000/I
+92,Taavi,Hõbejõgi,taavi.hobejogi@vironia.ee,Tartu,2008/I
+93,Mikk,Romulus,mikk.romulus@gmail.com,Tartu,2007/II
+94,Madis,Puju,madis.puju@vironia.ee,Tallinn,2004/II
+98,Mathis,Bogens,mathis.bogens@gmail.com,Tartu,2008/II
+99,Kaarel,Roostar,kaarel.roostar@ten.ee,Tartu,2008/II
+101,Kalle,Kaasa,kalle.kaasa@mail.ee,Vilistlaskogu,1994/I
+103,Joonas,Jakobson,crappersledge@hot.ee,Vilistlaskogu,1998/II
+104,Andrius,Pakaste,pagan@lap.ttu.ee,Tallinn,2002/II
+105,Riho,Palis,,Tartu,2009/I
+107,Priit,Kaup,,Tartu,2009/I
+108,Alo,Allik,,Tartu,2009/I
+109,Sander,Maripuu,,Tartu,2009/I
+111,Kristjan,Oinus,,Tallinn,2008/I
+112,Vidrik,Sommer,,Tallinn,2007/II
+116,Indrek,Nuume,,Vilistlaskogu,1996/II
+121,Haldo-Rait,Harro,hrharro@ut.ee,Tartu,2009/II
+122,Kristjan,Jekimov,kristjanjekimov@hotmail.com,Tartu,2009/II
+125,Jaagup,Lepland,lepland_5@msn.com,Tartu,2009/II
+127,Jorma,Rebane,redfox20ut.ee,Tartu,2009/II
+128,Ilmar,Tammisto,ilmar131@hot.ee,Tartu,2009/II
+130,Erik,Mölder,demen@hot.ee,Tartu,2009/II
+131,Tarvo,Vaarmets,,Vilistlaskogu,2002/II
+132,Juhan,Kinks,juhankinks@hot.ee,Tartu,2009/II
+133,Ivar,Arumäe,ivar.arumae@autoliv.com,Tallinn,2009/II
+134,Raimo,Läänemets,,Tallinn,2009/I
+136,Tanel,Sauna,,Tallinn,1999/II
+138,Oliver,Kõrre,oliver.korre@gmail.com,Tallinn,2009/I
+139,Ardo,Pajur,ardo.pajur@mail.ee,Vilistlaskogu,1995/II
+142,Tiit,Tamberg,tambergtiit@hot.ee,Tallinn,2012/II
+144,Aleksandr,Ess,Aleksandr@vironia.ee,Tallinn,2008/II
+145,Madis,Metelitsa,madis.metelitsa@gmail.com,Tartu,2010/I
+146,Martin,Mändveer,martinmandveer@hotmail.com,Tartu,2010/I
+147,Rudolf-Harri,Oberg,rudolfoberg@hot.ee,Tartu,2010/I
+149,Rasmus,Ligi,rasmus.ligi@vironia.ee,Tartu,2010/I
+150,Jarko,Kraht,vihterpalu@gmail.com,Tallinn,2009/II
+151,Valjo,Tooming,,Vilistlaskogu,1996/II
+152,Argo,Kasemaa,,Tallinn,1996/II
+155,Mati,Räli,mati@vironia.ee,Tallinn,2003/II
+156,Ain,Must,,Vilistlaskogu,1988/II
+157,Kuldar,Hansen,kuldar.hansen.001@mail.ee,Vilistlaskogu,1996/I
+159,Indrek,Raave,indrek.raave@gmail.com,Tartu,2010/II
+161,Hendrik,Metspalu,kala_aju@msn.com,Tartu,2010/II
+162,Jürgen,Lina,jlina@ut.ee,Tartu,2010/II
+166,Tartu,Oldermann,oldermann.tartu@vironia.ee,Tartu,1900/II
+168,Ronald,Juurmaa,juurmaa@gmail.com,Vilistlaskogu,2005/II
+169,Toomas,Mirka,,Vilistlaskogu,1998/I
+170,Siim,Bobkov,boku1986@gmail.com,Tallinn,2007/II
+171,Hannes,Raid,hannes.raid@gmail.com,Tallinn,2003/II
+172,Raul ,Ennus ,,Vilistlaskogu,2000/II
+173,Argo,Jürisson,,Vilistlaskogu,1996/II
+174,Meelis,Rull,,Vilistlaskogu,2003/I
+175,Priit,Aakre,,Vilistlaskogu,1988/II
+176,Marek,Miil,,Tallinn,1996/I
+178,Rein,Visk,,Vilistlaskogu,1994/II
+179,Toomas,Lepplaan,lepplaan@gmail.com,Tartu,2011/I
+180,Siim,Jõgis,js.siim@mail.ee,Tartu,2011/I
+181,rait,Vagula,raitvagula@gmail.com,Tallinn,2010/II
+182,Margus,Härm,dento@datanet.ee,Vilistlaskogu,1995/II
+183,Erik,Ranne,erik.ranne,Vilistlaskogu,1994/II
+184,Karl,Kupits,karl@maves.ee,Vilistlaskogu,1998/I
+185,Ivar-Anton,Karros,iak.tyhine@gmail.com,Vilistlaskogu,1988/II
+188,Eerik,Randsalu,eerikr@gmail.com,Toronto,2000/II
+189,Tõnu,Prost,ae_prost@hotmail.com,Toronto,2006/II
+190,Rein,Naylor,esto_reinstorms@hotmail.com,Toronto,2010/II
+191,Adam,Migur,adam.migur@gmail.com,Toronto,2010/II
+193,Andreas,Menes,bubba.menes@gmail.com,Toronto,2010/II
+194,Markus,Eichenbaum,meichenb@uwo.ca,Toronto,2010/II
+195,Markus,Liik,markus.liik@gmail.com,Toronto,2010/II
+196,Wesley,Thomas,wesley@torii-npi.vom,Toronto,2010/II
+197,Miku,Linkruus,proosit@live.ca,Toronto,2008/II
+198,Paul,Marley,ptmarley gmail.com,Toronto,2003 II
+199,Mihkel,Kütti,mkutti@uwo.ca,Toronto,2010/II
+200,Viljar,Mee,viljar@gmail.com,Tallinn,2001/II
+201,Mihkel,Toome,mtoome@gmail.com,Toronto,2000/II
+202,Aado,Toomsalu,aado.toomsalu@mail.ee,Tallinn,2010/II
+203,Andres,Kimsto,kimstoar@mcmaster.ca,Toronto,2009/II
+204,Robert,Kübar,ticats2004@hotmail.com,Toronto,2008/II
+206,Mihkel,Nõmm,mihkelnomm@gmail.com,Tallinn,2010/II
+207,Paul,Eichenbaum,pkm.eichenbaum@bell.net,Toronto,1982/II
+208,Juri,Kimsto,jurikimsto@yahoo.ca,Toronto,2009/II
+209,Tõnis,Haube,,Tallinn,2003/II
+210,Koit,Tõnisson,koit.tonisson@gmail.com,Vilistlaskogu,1998/II
+211,Nick,Kazakoff,,Toronto,2007/II
+212,Martin,Lään,,Vilistlaskogu,1997/I
+213,Gert,Kaju,,Tallinn,1999/I
+214,Tõnis,Truumaa,truumaa@gmail.com,Tartu,2008/II
+216,Jasse,Jallai,,Vilistlaskogu,1998/I
+217,Uku,Lõhmus,,Vilistlaskogu,1997/I
+218,Kaido,Loor,,Vilistlaskogu,1993/I
+219,Karl Erik,Sahtel,karl.sahtel@rmk.ee,Tallinn,2010/II
+220,Jaak Erik,Laja,erik.laja@mail.ee,Tartu,2011/II
+221,Karl-Adam,Kaustel,karl-adam.kaustel@vironia.ee,Vilistlaskogu,2011/II
+222,Georg-Rainer,Treufeldt,,Tallinn,2010/II
+223,Niilo,Hein,,Vilistlaskogu,1993/II
+224,Ken,Veski,ken.veski@gmail.com,Tallinn,2008/II
+225,Kuido,Külm,kuido20@yahoo.com,Vilistlaskogu,1991/II
+226,Rein,Kuik,rein.kuik@kliinikum.ee,Vilistlaskogu,1993/I
+227,Einar,Hillep,,Vilistlaskogu,1992/II
+228,Priit,Paap,priit_paap@hotmail.com,Tallinn,2007/II
+229,Lauri,Loo,,Tallinn,2011/II
+231,Ats,Allikmets,,Tallinn,2011/II
+232,Tarvi,Teder,,Tallinn,2011/II
+233,Kristjan,Jagomann,,Tallinn,2010/I
+234,Priit,Kuljus,,Tallinn,2007/II
+235,Lauri,Laanmets,,Tallinn,1999/II
+240,Tex,Vertmann,,Vilistlaskogu,1997/I
+241,Indrek,Makki,indrekmakki@gmail,com,Tallinn,2008/I
+242,Tanel,Kaju,tanel.kaju@gmail.com,Tallinn,2010/II
+243,Rein,Kannussaar,,Tallinn,2008/II
+244,Rainer,Jürgenson,rainer.jurgenson@eesti.ee,Vilistlaskogu,1999/II
+245,Lauri,Prei,,Vilistlaskogu,1993/II
+247,Oliver,Simmerman,ivellios@hot.ee,Tartu,2012/II
+248,Kristjan,Karron,karron92@hotmail.com,Tartu,2012/II
+250,Ever,Oll,,Vilistlaskogu,1998/I
+252,Andrus,Soodla,,Vilistlaskogu,1993/II
+253,Alo,Rüütel,alo@trummar.com,Tartu,2012/II
+255,Mait,Tõnisson,,Vilistlaskogu,1993/II
+257,Mikk,Maasik,maasik2@gmail.com,Tartu,2013/I
+258,Henry,Narits,henry.narits@gmail.com,Tartu,2013/I
+259,Kristen,Valdenberg,kristenvaldenberg@gmail.com,Tartu,2013/I
+263,Peeter,Nieländer,peetern@yahoo.com,Toronto,2000/II
+265,Raul,Randmer,raulrandmer@gmail.com,Tallinn,2012/I
+266,Tõnu,Jalakas,tonujalakas@hotmail.com,Tallinn,2009/II
+268,Marten,Uusväli,,Tallinn,2012/II
+269,Tõnis ,Vaher,tnnn.vaher@gmail.com,Tartu,2013/II
+270,Riho,Timm,,Tartu,2013/II
+271,Villy,Salem,,Tartu,2013/II
+275,Läti,Mehed,,Tartu,3000/II
+277,Kilvar,Kessler,kilvar.kessler@gmail.com,Tartu,1992/II
+280,Ivo,Paulus,,Tallinn,2002/II
+281,Andrus,Jõgi,,Tallinn,2000/II
+282,Lennart,Post,postlennart1@gmail.com,Tallinn,2013/II
+283,Selonija,,,RIGAS BALZAMS,5000/II
+284,Karjalainen,,,NOKIA,5000/II
+285,Toronto,,,Toronto ,5000/II
+286,Kaspar,Ojasalu,ojasalu.kaspar@gmail.com,Tallinn,2012/I
+287,Taavi,Raadik,,Tallinn,2004/II
+288,Mati,Sild,,Tallinn,2012/II
+289,Marko,Jaaksaar,,Tallinn,2012/II
+291,Jaan,Lašmanov,,Tallinn,2013/II
+292,Robert-Karl,Liive,robirealgmail.com,Tallinn,2013/II
+293,Ravel,Riik,ravelr93@gmail.com,Tartu,2014/II
+294,Jerzy Edvard,Kaplinski,jerzy.kaplinski@gmail.com,Tartu,2014/II
+295,Martin,Lõbu,martin.lobu@gmail.com,Tallinn,2013/II
+299,Ats,Aasmaa,ats.aasmaa@gmail.com,Tartu,2014/II
+301,Oliver,Simpson,,Tallinn,2013/II
+302,Taavi,Tamm,taavitamm392@gmail.com,Tallinn,2014/II
+303,Alo,Sula,alo.sula@eesti.ee,Tallinn,2012/I
+304,Aivar,Nigumann,aikuman@hotmail.com,Tallinn,2014/II
+305,Allar,Kirikmäe,allarkir@gmail.com,Tallinn,2014/II
+306,Silver,Reinart,silverreinart@gmail.com,Tallinn,2014/II
+308,Kaimar,Seljamäe,kaimars@gmail.com,Tallinn,1997/II
+309,Hillar,Lauri,,Vilistlaskogu,1983/I
+310,Janek,Gustavson,janek.gustavson@gmail.com,Tallinn,2013/II
+311,Olev Mait,Makk,olev.makk@me.com,vilistlaskogu,1990/II
+314,Oliver,Laidroo,oliverlaidroo@gmail.com,Tartu,2015/I
+315,Kristjan,Kalve,kristjan.kalve@gmail.com,Tartu,2015/I
+317,Rauno,Siinmaa,rauno.siinmaa@gmail.com,Tallinn,2014/II
+319,Tarmo,Saks,,Toronto,1992/II
+320,Andres,Pürg,,Vilistlaskogu,1992/II
+321,Andi,Binsol,andibinsol@gmail.com,Tallinn,2000/I
+323,Madis,Päts,,Vilistlaskogu,1988/II
+324,Toomas,Ruuben,,Tallinn,2013/II
+325,Major,Domus,,Tartu,1900/II
+327,Raigo,Sõlg,raigo@adepte.ee,Vilistlaskogu,1990/II
+329,Arti,Truman,,Tartu,2009/II
+330,Martin,Arusoo,,Tartu,2015/II
+332,Joosep,Sarapuu,,Tartu,2015/II
+333,Hillar,Tork,,Toronto,1977/II
+334,Algis,Sepp,,Tallinn,2015/I
+335,Raoul ,Langvee,,Montreal,1973/II
+336,Oskar,Aava,oskar.aava@gmail.com,Tartu,2016/I
+338,Raimond,Pääru,raimond.paaru@gmail.com,Tallinn,2015/II
+340,Hendrik,Tork,hendrik.tork@GMAIL.COM,Toronto,2014/II
+342,Ingvar,Paplavskis,,Tallinn,2016/II
+343,Karl-Tanel,Paes,karltanelpaes@gmail.com,Tartu,2016/II
+344,Kaarel,Kengsepp,kaarel.kengsepp@gmail.com,Tartu,2016/II
+346,Krister,Kruusmaa,,Vilistlaskogu,2016/II
+348,Jaan,Männik,,Tallinn,2016/II
+350,Georg Andreas,Valgerist,,Tallinn,2016/II
+351,Tarmo,Kööp,,Tallinn,1991/II
+352,Albert,Suur,adalberaht97@gmail.com,Tartu,2017/I
+353,Toomas,Juhani,,vilistlaskogu,1988/II
+354,Magister,Cantandi,,Tartu,1900/II
+356,Omari,Loid,,Tartu,2017/I
+357,Anton,Žatkin,,Tartu,2017/I
+358,Arkonia,Arkonia,,Arkonia,4000
+359,Welecja,Welecja,,Welecja,4000
+360,Talavija,Talavija,,Talavija,4000
+363,Matiss,Briedis,,Tallinn,2017/II
+364,Rein,Pütsepp,rein.py@gmail.com,vil!,1992/II
+365,Tanel,Ross,,Vilistlaskogu,1988/II
+366,Ökonoom,,,Tartu,1900/II
+367,Mihkel,Killo,mihkel.killo@vironia.ee,Tartu,2017/II
+368,Charles Kaarel,Kern,,Tartu,2017/II
+369,Uku,Kangur,uku.kangur@gmail.com,Tartu,2017/II
+370,Richard Ott,Leitham,,Tallinn,2017/II
+372,Martin,Maipuu,,Tartu,2017/II
+373,Tartu,Senior,,Tartu,1900/II
+374,Joosep,Kapsta,jkapsta@gmail.com,Tartu,2018/I
+376,Kristjan,Kolde,kristjan.kolde@gmail.com,Tallinn,2017/II
+377,Urmas,Ruus,urmas.ruus@gmail.com,Vilistlaskogu,1995/I
+378,Kalev,Kallemets,kalev.kallemets@gmail.com,Vilistlaskogu,1997/II
+380,Sten Egert,Tammeveski,tammeveski2@gmail.com,Tartu,2018/II
+381,Rene,Lumiste,lumisterene@gmail.com,Tartu,2018/II
+386,Joonas,Põder,poder.joonas@gmail.com,Tartu,2019/I
+388,Karl,Villers,villerskarl@gmail.com,Tartu,2019/I
+389,Tanil Peeter,Kangur,tanilkangur@gmail.com,Tartu,2018/II
+390,Peeter,Luikmel,luikmel@gmail.com,Tallinn,1998/I
+393,Johan Gustav,Jõeaas,joeaasjohangustav@gmail.com,Tartu,2019/II
+394,Allar,Saarman,saarman.allar@gmail.com,Tallinn,2019/II
+395,Hans-Martin,Pael,hansmartin.pael@gmail.com,Tartu,2019/II
+396,Kristofer,Leping,kristofer.leping@gmail.com,Tartu,2019/II
+397,Hans Markus,Kalmer,hansmarkus.kalmer@vironia.ee,Tartu,2019/II
+400,Mirko,Sprenk,mirko.sprenk@vironia.ee,Tallinn,2004/II
+401,Hannes,Mädo,hannes.mado@gmail.com,Vilkogu,1999/II
+402,Henri,Tõrva,henritorva@gmail.com,Tartu,2020/II
+404,Martin,Lauri,,Tartu,2020/II
+406,Hain,Luud,hain.luud@gmail.com,Tartu,2021/I
+407,Tauno,Antsmäe,taunoantsmae@gmail.com,vilistlaskogu,1993/II
+408,Kert,Liinat,Kert.liinat@gmail.com,Tallinn,2019/I
+409,Mihkel-Erik,Rebane,,Tallinn,2019/II
+411,Rasmus,Ihermann,rasmus.vesiratas@gmail.com,Tartu,2021/II
+413,Marc Ander,Etti,marcander.etti@gmail.com,Tartu,2021/II
+415,Martins,Briedis,martinsbried@gmail.com,Tallinn,2020/II
+416,Marten,Pelt,martenpelt@gmail.com,Sakala,2001/II
+417,Karl,Tõnisson,karl.tonisson@outlook.com,Tartu,2022/I
+418,Gregor Artur,Vahtra,gregor.vahtra@gmail.com,Tartu,2022/I
+419,Karl,Rahn,karlrahn13@gmail.com,Tartu,2022/I
+420,Herbert,Konnula,konnula@gmail.com,Tartu,2022/I
+423,Tõnu,Palm,tonu.palm5@gmail.com,Vilistlaskogu,1991 II
+424,Toomas,Tuutma,toomas.tuutma@gmail.com,vilistlaskogu,1991/II
+425,Jürgen,Täll,jtall@mail.com,vilistlaskogu,1993/I
+426,Ville Mart,Volar,vm.volar@gmail.com,Tallinn,2022/I
+427,Armin,Mere,,Tartu,2022/II
+429,Martin,Veližanin,,Tartu,2022/II
+430,Johannes,Murre,,Tartu,2022/II
+431,Rain ,Leini,rain.leini99@gmail.com,Tallinn,2021/II
+432,Siim,Pärsimägi,siimparsimagi@gmail.com,Tartu,2021/II
+435,Mathias,Matjus Rot!,mathiasmatjus@gmail.com,C!R!,2021/II
+436,Henry,Heinleht,heinlehth@gmail.com,Tallinn,2021/II
+438,Ervin,Kubits,ervinkubits@gmail.com,Tallinn,2021/II
+439,Rando,Ernits,rando.ernits@gmail.com,C!Rev!,2016/II
+440,Ken,Püss,kenpuss7@gmail.com,Tallinn,2022/II
+441,Uku-Laur,Kübarsepp,uku-laur.kybarsepp@vironia.ee,Tartu,2023/II
+442,Oliver,Hion,,Tartu,2023/II
+443,Indrek,Raudik,,Tartu,2023/II
+444,Rainer,Erman,rainer.erman@gmail.com,Tallinn,2002/II
+448,Markus Mattheus,Maser,markusmattheusm@gmail.com,Tartu,2023/II
+449,Ott,Oopkaup,ott.oopkaup@gmail.com,EÜS,2015/II
+450,Maria,Malk,mmalk95@gmail.com,Amicitia,2015/I
+451,Ruudo,Herman,ruudoherman@gmail.com,Tartu,2023/II
+452,Karl Aleksander,Kaplinski,karl.kaplinski@gmail.com,Tartu,2023/II
+453,Richard,Reisenbuk,,Tartu,2023/II
+455,Kristo Markus,Soika,kristom.soika@gmail.com,Tallinn,2022/II
+456,Mihkel Jaan,Balodis,mihkel.jaan.balodis@gmail.com,Tallinn,2022/II
+457,Ervin,Talts,ervin.talts@gmail.com,Tallinn,2023/II
+458,Markus,Meier,,Tartu,2024/I
+459,Karl Theodor,Grigor,,Tallinn,2023/II
+461,Rasmus ,Tannebaum,,Tallinn,2024/I
+463,Krister Aleks,Kasemaa,kristeraleks@outlook.com,C!F!L!,2015/II
+464,Oskar,Pürg,oskar.purg@gmail.com,Tallinn,2021/II
+465,Andres,Must,,Tallinn,2022/II
+467,Sten Marten,Viira,sten.viira@gmail.com,Tartu,2024/II
+469,Oliver,Oolup,oliver.oolup@gmail.com,Tartu,2024/II
+473,Kenneth,Ottas,kenneth.ottas@gmail.com,Tartu,2024/II
+474,Ruben,Tikerperi,r.tikerperi@gmail.com,Tartu,2024/II
+475,Hugo Rait,Mei,hugoraitmei@gmail.com,Tartu,2024/II
+476,Georg Villem,Kärner,georg6788@gmail.com,Tartu,2024/II
+477,Markus,Arras,markusarras2004@gmail.com,Tartu,2024/II
+481,Oskar,Möll,oskar.moell@gmail.com,Tartu,2024/II
+482,Kert Kristjan,Viira,kert.viira@gmail.com,Tartu,2024/II
+483,Eke,Tooming,eke.tooming@gmail.com,Tartu,2024/II
+484,Mihkel Markus,Miks,mihkelmarkusmiks@gmail.com,Tartu,2024/II
+485,Richard,Silm,rix2001@gmail.com,Tartu,2024/II
+486,Hendrik,Püss,hendrikpyss@gmail.com,Tartu,2024/II
+487,Karlis,Kamradzis,kamradzis@inbox.lv,Selonija,1989
+488,Daniel Eerik,Sillamets,daniel.eerik.sillamets@vironia.gmail,Tallinn,2024/II
+489,Martin,Meiorg,martin.meiorg@vironia.ee,Tallinn,2024/II
+490,Olaf ,Pandre,olaf.pandre@vironia.ee,Tallinn,2024/II
+491,Anneli,Kaasa,,Indla,2004/II
+492,Kaspar,Kliss,kasparkliss@gmail.com,C!U!,2020/II
+493,Kristiin,Kuuslap,kristiinkuuslap@gmail.com,C!S!E!,2023/I
+494,Katariina ,Jõks,katariina.jox@gmail.com,Kodanik,2023/I
+495,Karmen,Freienthal,karmen.freienthal@gmail.com,Amicitia,2022/I
+496,Aldo,Ohno,,Tallinn,2024/II
+497,Henrik,Heikkilä,,Tallinn,2024/II
+498,Kevin,Järvekald,,Tallinn,2024/II
+499,Lauri,Kummel,,Tallinn,2024/II
+500,Lauri,Läänesaar,,Tallinn,2024/II
+501,Martin,Mänd,,Tallinn,2024/II
+502,Rihard,Soidla,,Tallinn,2024/II
+503,Silver,Taza,,Tallinn,2024/II
+504,Georg,Markov,georg.markov12@gmail.com,Tartu,2025/I
+505,Hans Robert,Kannukene,hrkannukene@gmail.com,Tartu,2025/I
+506,Rander Erich,Pikkani,rander.pikkani@gmail.com,Tartu,2025/I
+507,Riko,Tasane,rikotasan3@gmail.com,Tartu,2025/I
+508,Priit,Rebane,,Korporatsioon Fraternitas Estica,1995/I
+509,Arctica,Arctica,,Riga,4000
+510,Silver,Moppel,silver.moppel@vironia.ee,Tartu,2025/II
+511,Sander,Jalajas,sander.jalajas@vironia.ee,Tartu,2025/II
+512,Markus,Jõgi,markus.jogi@vironia.ee,Tartu,2025/II
+513,Siim Oskar,Ots,siimoskar.ots@vironia.ee,Tartu,2025/II
+514,Erkki,Tuul,erkki.tuul@gmail.com,Tartu,2025/II
+515,Toomas,Marley,tom@tommarley.com,Toronto,1971/II
+517,Alvin,Reck,alvin.c.reck@gmail.com,Tallinn,2025/II
+518,Laur,Kangur,Laur.Kangur@gmail.com,C!F!E! ,2020/2021
+519,Joonas Markus,Meiorg,,Tartu,2026/I
+520,Peeter,Ross,peeter.ross@taltech.ee,Vilistlaskogu,1988/II
+521,Sander,Metsis,sandermet04@gmail.com,Tartu,2026/I
+522,Jaan,Luhamaa,jluhamaa@gmail.com,Tartu,2026/I
+523,Bogdan,Janakov,bogdan.janakov@vironia.ee,Tartu,2026/I
+524,Harry,Vipper,harry.vipper@vironia.ee,Tallinn,2025/II
+525,Oliver,Lembra,oliver.lembra@vironia.ee,Tallinn,2025/II
+526,Joonas,Vain,,Sakala,2018/II
+527,Tõnn ,Raudoja,,Revelia,2024/II

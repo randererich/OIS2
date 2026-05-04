@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS people (
   id SERIAL PRIMARY KEY,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
+  email TEXT,
   coetus TEXT,
   konvent TEXT,
   is_visible BOOLEAN NOT NULL DEFAULT TRUE,

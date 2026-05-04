@@ -268,6 +268,18 @@ textarea {
   color: #1b1b1b;
 }
 
+[data-theme="dark"] .balance-debt {
+  color: #ff8f8f;
+}
+
+[data-theme="dark"] .balance-credit {
+  color: #86f59a;
+}
+
+[data-theme="dark"] .balance-zero {
+  color: #ececf4;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;

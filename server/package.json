@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/app.js",
-    "start": "node src/app.js"
+    "start": "node src/app.js",
+    "reset:people": "node scripts/reset-people.js",
+    "import:people": "node scripts/import-people.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

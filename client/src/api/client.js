@@ -188,10 +188,32 @@ async function doFetch(path, options = {}, getAuth, onUnauthorized) {
       return null;
     }
 
-    const data = await response.json();
+    const contentType = response.headers.get("content-type") || "";
+    const rawBody = await response.text();
+
+    let data = null;
+    if (rawBody) {
+      if (contentType.includes("application/json") || rawBody.startsWith("{") || rawBody.startsWith("[")) {
+        try {
+          data = JSON.parse(rawBody);
+        } catch {
+          data = rawBody;
+        }
+      } else {
+        data = rawBody;
+      }
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || "Request failed");
+      if (data && typeof data === "object" && data.error) {
+        throw new Error(data.error);
+      }
+
+      if (typeof data === "string" && data.trim()) {
+        throw new Error(data.trim());
+      }
+
+      throw new Error("Request failed");
     }
 
     return data;

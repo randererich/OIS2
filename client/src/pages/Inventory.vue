@@ -206,7 +206,8 @@ onMounted(async () => {
 
 <style scoped>
 .status-green {
-  background: #e8f6e8;
+  background: var(--surface);
+  border-left: 4px solid var(--ok);
 }
 
 .status-yellow {

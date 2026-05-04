@@ -36,8 +36,7 @@ export async function getPeople(req, res, next) {
          WHERE CONCAT(first_name, ' ', last_name) ILIKE $1
             OR COALESCE(coetus, '') ILIKE $1
             OR COALESCE(konvent, '') ILIKE $1
-         ORDER BY ${COETUS_SORT_SQL}, last_name ASC, first_name ASC
-         LIMIT 200`,
+         ORDER BY ${COETUS_SORT_SQL}, last_name ASC, first_name ASC`,
         [`%${q}%`]
       );
       return res.json(result.rows);
@@ -69,8 +68,7 @@ export async function getVisiblePeople(req, res, next) {
       `SELECT *
        FROM people
        WHERE ${where.join(" AND ")}
-       ORDER BY ${COETUS_SORT_SQL}, sort_order ASC, last_name ASC, first_name ASC
-       LIMIT 200`,
+       ORDER BY ${COETUS_SORT_SQL}, sort_order ASC, last_name ASC, first_name ASC`,
       params
     );
     res.json(result.rows);

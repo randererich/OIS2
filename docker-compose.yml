@@ -25,9 +25,9 @@ services:
       PORT: ${PORT:-3000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-konvent}:${POSTGRES_PASSWORD:-konvent}@db:5432/${POSTGRES_DB:-konvent_pos}
       APP_USERNAME: ${APP_USERNAME:-konvent}
-      APP_PASSWORD: ${APP_PASSWORD:-change-me}
+      APP_PASSWORD: ${APP_PASSWORD:-MirtelPohlaTissid}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-MirtelPohlaTissid}
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
       CLIENT_ORIGINS: ${CLIENT_ORIGINS:-http://localhost:5173,http://ois2.tartu.vironia.ee:5173,http://ois2.tartu.vironia.ee,https://ois2.tartu.vironia.ee}
     depends_on:
