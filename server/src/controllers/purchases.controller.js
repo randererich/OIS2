@@ -1,6 +1,8 @@
 import { hasTableColumn, query } from "../db.js";
 import { createPurchase } from "../services/purchase.service.js";
 
+const MAX_PURCHASE_QUANTITY = 100;
+
 export async function getPurchases(req, res, next) {
   try {
     const hasProductUnit = await hasTableColumn("products", "unit");
@@ -73,15 +75,20 @@ export async function getPurchases(req, res, next) {
 export async function postPurchase(req, res, next) {
   try {
     const { person_id, product_id, quantity, comment } = req.body;
+    const parsedQuantity = Number(quantity);
 
-    if (!person_id || !product_id || !Number.isInteger(Number(quantity)) || Number(quantity) === 0) {
+    if (!person_id || !product_id || !Number.isInteger(parsedQuantity) || parsedQuantity === 0) {
       return res.status(400).json({ error: "person_id, product_id and non-zero integer quantity are required" });
+    }
+
+    if (Math.abs(parsedQuantity) > MAX_PURCHASE_QUANTITY) {
+      return res.status(400).json({ error: `quantity must be between -${MAX_PURCHASE_QUANTITY} and ${MAX_PURCHASE_QUANTITY}` });
     }
 
     const purchase = await createPurchase({
       personId: Number(person_id),
       productId: Number(product_id),
-      quantity: Number(quantity),
+      quantity: parsedQuantity,
       comment
     });
 
@@ -90,4 +97,3 @@ export async function postPurchase(req, res, next) {
     next(error);
   }
 }
-

@@ -42,6 +42,7 @@ const inputValue = ref("1");
 const quantityInput = ref(null);
 const isDefaultEntry = ref(true);
 const error = ref("");
+const MAX_PURCHASE_QUANTITY = 100;
 
 function sanitizeRawInput(raw) {
   const trimmed = String(raw || "").trim();
@@ -136,8 +137,13 @@ function backspace() {
 function nextStep() {
   error.value = "";
   const quantity = Number(sanitizeRawInput(inputValue.value));
-  if (!Number.isFinite(quantity) || quantity === 0) {
-    error.value = "Palun sisesta korrektne kogus (mitte 0).";
+  if (!Number.isFinite(quantity) || !Number.isInteger(quantity) || quantity === 0) {
+    error.value = "Palun sisesta korrektne täisarvuline kogus (mitte 0).";
+    return;
+  }
+
+  if (Math.abs(quantity) > MAX_PURCHASE_QUANTITY) {
+    error.value = `Korraga saab kirja panna kuni ${MAX_PURCHASE_QUANTITY} toodet.`;
     return;
   }
 
