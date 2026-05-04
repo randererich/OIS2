@@ -178,6 +178,10 @@ onUnmounted(() => {
   text-align: center;
 }
 
+[data-theme="dark"] .confirm-balance {
+  color: #ffffff;
+}
+
 .confirm-home-button {
   align-self: center;
   font-size: 1.3rem;
