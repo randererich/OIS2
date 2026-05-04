@@ -66,6 +66,10 @@ nav {
   padding-right: 48px;
   background: var(--menu-table-bg);
   border: 1px solid var(--border);
+  border-left: 0;
+  border-right: 0;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
   padding: 8px 48px 8px 8px;
 }
 
