@@ -5,8 +5,8 @@
         <th colspan="2">{{ category.emoji || "" }} {{ category.name }} {{ category.emoji || "" }}</th>
       </tr>
       <tr>
-        <th>Toode</th>
-        <th>{{ category.products.some((product) => product.cash_operation) ? 'Summa' : 'Hind' }}</th>
+        <th :colspan="isCashCategory ? 2 : 1">Toode</th>
+        <th v-if="!isCashCategory">Hind</th>
       </tr>
     </thead>
     <tbody>
@@ -16,15 +16,17 @@
         class="clickable"
         @click="$emit('select', product)"
       >
-        <td>{{ product.name }}</td>
-        <td>{{ product.cash_operation ? 'Summa' : money(product.price) }}</td>
+        <td :colspan="product.cash_operation ? 2 : 1">{{ product.name }}</td>
+        <td v-if="!product.cash_operation">{{ money(product.price) }}</td>
       </tr>
     </tbody>
   </table>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from "vue";
+
+const props = defineProps({
   category: {
     type: Object,
     required: true
@@ -32,6 +34,10 @@ defineProps({
 });
 
 defineEmits(["select"]);
+
+const isCashCategory = computed(() =>
+  props.category.products.some((product) => product.cash_operation)
+);
 
 function money(value) {
   return `${Number(value).toFixed(2)} €`;
