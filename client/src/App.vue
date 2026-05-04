@@ -1,12 +1,6 @@
 <template>
   <div class="app">
     <header>
-      <div class="header-top">
-        <button class="dark-toggle" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleDark">
-          {{ isDark ? '☀️' : '🌙' }}
-        </button>
-      </div>
-
       <nav v-if="!isAdminRoute">
         <RouterLink to="/">Pane kirja</RouterLink>
         <RouterLink to="/debts">Võlad</RouterLink>
@@ -14,6 +8,9 @@
         <RouterLink to="/stats">Statistika</RouterLink>
         <RouterLink to="/inventory">Inventuur</RouterLink>
         <RouterLink to="/admin">Admin</RouterLink>
+        <button class="dark-toggle" type="button" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleDark">
+          {{ isDark ? '☀️' : '🌙' }}
+        </button>
       </nav>
 
       <nav v-else>
@@ -24,6 +21,9 @@
         <RouterLink to="/admin/inventory">Varud / Inventuur</RouterLink>
         <RouterLink to="/admin/purchases">Kirjed (admin)</RouterLink>
         <RouterLink to="/admin/password">Vaheta parooli</RouterLink>
+        <button class="dark-toggle" type="button" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleDark">
+          {{ isDark ? '☀️' : '🌙' }}
+        </button>
       </nav>
     </header>
 
@@ -61,19 +61,9 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
 .dark-toggle {
-  position: absolute;
-  top: 30px;
-  right: 0;
   font-size: 1.3rem;
-  padding: 4px 8px;
+  padding: 2px 8px;
   border: 1px solid var(--btn-border);
   background: var(--btn-bg);
   cursor: pointer;
