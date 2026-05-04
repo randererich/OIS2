@@ -6,7 +6,7 @@
       </tr>
       <tr>
         <th>Toode</th>
-        <th>Hind</th>
+        <th>{{ category.products.some((product) => product.cash_operation) ? 'Summa' : 'Hind' }}</th>
       </tr>
     </thead>
     <tbody>
@@ -17,7 +17,7 @@
         @click="$emit('select', product)"
       >
         <td>{{ product.name }}</td>
-        <td>{{ money(product.price) }}</td>
+        <td>{{ product.cash_operation ? 'Summa' : money(product.price) }}</td>
       </tr>
     </tbody>
   </table>

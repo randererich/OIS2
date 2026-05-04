@@ -1,5 +1,20 @@
 import { hasTableColumn, query } from "../db.js";
 
+function cashOperationFor(categoryName, productName) {
+  if (!["Sularaha", "REPART", "🪙 REPART 🪙"].includes(categoryName)) {
+    return null;
+  }
+
+  const normalizedName = String(productName || "").toLowerCase();
+  if (normalizedName === "sissemakse") {
+    return "deposit";
+  }
+  if (normalizedName === "väljamakse" || normalizedName === "valjamakse") {
+    return "withdrawal";
+  }
+  return null;
+}
+
 export async function getProducts(req, res, next) {
   try {
     const result = await query(
@@ -61,6 +76,7 @@ export async function getProductMenu(req, res, next) {
         unit: row.unit,
         stock_quantity: row.stock_quantity,
         is_inventory_tracked: row.is_inventory_tracked,
+        cash_operation: cashOperationFor(row.category_name, row.product_name),
         sort_order: row.product_sort_order
       });
     }

@@ -1,9 +1,10 @@
 <template>
   <section class="page pos-quantity-page">
-    <h2 class="pos-quantity-title">Sisesta kogus</h2>
+    <h2 class="pos-quantity-title">Sisesta {{ isCashOperation ? 'summa' : 'kogus' }}</h2>
 
     <p class="inline-summary pos-quantity-summary">
-      {{ posStore.product?.name }} - {{ money(posStore.product?.price) }}. Sisesta kogus.
+      {{ posStore.product?.name }}<template v-if="!isCashOperation"> - {{ money(posStore.product?.price) }}</template>.
+      Sisesta {{ isCashOperation ? 'summa' : 'kogus' }}.
     </p>
 
     <div class="actions pos-quantity-actions-top">
@@ -11,7 +12,7 @@
     </div>
 
     <label class="pos-quantity-input-wrap">
-      Kogus
+      {{ isCashOperation ? 'Summa' : 'Kogus' }}
       <input ref="quantityInput" class="pos-quantity-input" v-model="inputValue" inputmode="text" />
     </label>
 
@@ -31,7 +32,7 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import NumberPad from "../components/NumberPad.vue";
 import { usePosStore } from "../stores/posStore";
@@ -43,6 +44,7 @@ const quantityInput = ref(null);
 const isDefaultEntry = ref(true);
 const error = ref("");
 const MAX_PURCHASE_QUANTITY = 100;
+const isCashOperation = computed(() => Boolean(posStore.product?.cash_operation));
 
 function sanitizeRawInput(raw) {
   const trimmed = String(raw || "").trim();
@@ -137,12 +139,22 @@ function backspace() {
 function nextStep() {
   error.value = "";
   const quantity = Number(sanitizeRawInput(inputValue.value));
-  if (!Number.isFinite(quantity) || !Number.isInteger(quantity) || quantity === 0) {
+  if (!Number.isFinite(quantity) || quantity === 0) {
+    error.value = `Palun sisesta korrektne ${isCashOperation.value ? 'summa' : 'kogus'} (mitte 0).`;
+    return;
+  }
+
+  if (isCashOperation.value && quantity < 0) {
+    error.value = "Summa peab olema positiivne.";
+    return;
+  }
+
+  if (!isCashOperation.value && !Number.isInteger(quantity)) {
     error.value = "Palun sisesta korrektne täisarvuline kogus (mitte 0).";
     return;
   }
 
-  if (Math.abs(quantity) > MAX_PURCHASE_QUANTITY) {
+  if (!isCashOperation.value && Math.abs(quantity) > MAX_PURCHASE_QUANTITY) {
     error.value = `Korraga saab kirja panna kuni ${MAX_PURCHASE_QUANTITY} toodet.`;
     return;
   }

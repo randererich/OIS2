@@ -22,11 +22,20 @@
       </label>
 
       <p class="inline-summary">
-        <template v-if="isCorrection">
-          <strong>Parandus:</strong>
+        <template v-if="isCashOperation">
+          <strong>{{ posStore.product?.name }}:</strong>
+          {{ money(Math.abs(Number(posStore.quantity || 0))) }},
+          {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
         </template>
-        {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ posStore.product?.name }} = {{ money(posStore.total) }},
-        {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
+        <template v-else-if="isCorrection">
+          <strong>Parandus:</strong>
+          {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ posStore.product?.name }} = {{ money(posStore.total) }},
+          {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
+        </template>
+        <template v-else>
+          {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ posStore.product?.name }} = {{ money(posStore.total) }},
+          {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
+        </template>
       </p>
 
       <button type="button" :disabled="saving" @click="submit">
@@ -52,6 +61,7 @@ const saving = ref(false);
 const error = ref("");
 const successBalance = ref(null);
 const isCorrection = computed(() => Number(posStore.quantity || 0) < 0);
+const isCashOperation = computed(() => Boolean(posStore.product?.cash_operation));
 
 function money(value) {
   return `${Number(value || 0).toFixed(2)} €`;

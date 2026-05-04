@@ -80,6 +80,60 @@ WHERE p.category_id = c.id
   AND c.name = 'KANGE ALKOHOL'
   AND p.unit <> 'cl';
 
+UPDATE categories
+SET name = 'Sularaha',
+    emoji = '💶'
+WHERE name IN ('REPART', '🪙 REPART 🪙');
+
+INSERT INTO categories (name, emoji, sort_order, is_visible)
+SELECT 'Sularaha', '💶', 5, TRUE
+WHERE NOT EXISTS (
+  SELECT 1 FROM categories WHERE name = 'Sularaha'
+);
+
+WITH cash_category AS (
+  SELECT id
+  FROM categories
+  WHERE name = 'Sularaha'
+  ORDER BY sort_order ASC, id ASC
+  LIMIT 1
+)
+UPDATE products
+SET is_visible = FALSE
+WHERE name IN ('Muu repart', 'EtteMaks')
+  AND category_id = (SELECT id FROM cash_category);
+
+WITH cash_category AS (
+  SELECT id
+  FROM categories
+  WHERE name = 'Sularaha'
+  ORDER BY sort_order ASC, id ASC
+  LIMIT 1
+)
+INSERT INTO products (category_id, name, price, stock_quantity, unit, is_visible, is_inventory_tracked, sort_order)
+SELECT cash_category.id, x.name, 1.00, 0, 'tk', TRUE, FALSE, x.sort_order
+FROM cash_category
+CROSS JOIN (
+  VALUES
+    ('Sissemakse', 1),
+    ('Väljamakse', 2)
+) AS x(name, sort_order)
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM products p
+  WHERE p.category_id = cash_category.id
+    AND p.name = x.name
+);
+
+INSERT INTO people (first_name, last_name, coetus, konvent, is_visible, sort_order)
+SELECT 'Sula', 'Raha', '3000/I', 'pseudo', TRUE, 3000
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM people
+  WHERE lower(first_name) = lower('Sula')
+    AND lower(last_name) = lower('Raha')
+);
+
 ALTER TABLE inventory_count_reports
 ADD COLUMN IF NOT EXISTS valvevarv TEXT;
 

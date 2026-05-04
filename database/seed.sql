@@ -4,7 +4,7 @@ VALUES
   ('SÖÖK JA NÄKS', '🍟', 2, TRUE),
   ('KANGE ALKOHOL', '🥃', 3, TRUE),
   ('KRAADITA JOOK', '🥤', 4, TRUE),
-  ('REPART', '⚙️', 5, TRUE),
+  ('Sularaha', '💶', 5, TRUE),
   ('MUU LAHJA', '🍏', 6, TRUE)
 ON CONFLICT DO NOTHING;
 
@@ -20,7 +20,8 @@ FROM (
     ('SÖÖK JA NÄKS', 'Kismet', 1.20, 0, 'tk', TRUE, 2),
     ('KANGE ALKOHOL', 'Viin', 0.40, 0, 'cl', TRUE, 1),
     ('KRAADITA JOOK', 'Limonaad', 0.80, 0, 'tk', TRUE, 1),
-    ('REPART', 'EtteMaks', -1.00, 0, 'tk', FALSE, 1),
+    ('Sularaha', 'Sissemakse', 1.00, 0, 'tk', FALSE, 1),
+    ('Sularaha', 'Väljamakse', 1.00, 0, 'tk', FALSE, 2),
     ('MUU LAHJA', 'Karksi Õunasiider', 1.60, 0, 'tk', TRUE, 1)
 ) AS x(category_name, name, price, stock_quantity, unit, is_inventory_tracked, sort_order)
 JOIN categories c ON c.name = x.category_name

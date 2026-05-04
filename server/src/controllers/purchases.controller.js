@@ -77,18 +77,15 @@ export async function postPurchase(req, res, next) {
     const { person_id, product_id, quantity, comment } = req.body;
     const parsedQuantity = Number(quantity);
 
-    if (!person_id || !product_id || !Number.isInteger(parsedQuantity) || parsedQuantity === 0) {
-      return res.status(400).json({ error: "person_id, product_id and non-zero integer quantity are required" });
-    }
-
-    if (Math.abs(parsedQuantity) > MAX_PURCHASE_QUANTITY) {
-      return res.status(400).json({ error: `quantity must be between -${MAX_PURCHASE_QUANTITY} and ${MAX_PURCHASE_QUANTITY}` });
+    if (!person_id || !product_id || !Number.isFinite(parsedQuantity) || parsedQuantity === 0) {
+      return res.status(400).json({ error: "person_id, product_id and non-zero quantity are required" });
     }
 
     const purchase = await createPurchase({
       personId: Number(person_id),
       productId: Number(product_id),
       quantity: parsedQuantity,
+      maxPurchaseQuantity: MAX_PURCHASE_QUANTITY,
       comment
     });
 

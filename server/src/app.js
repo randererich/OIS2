@@ -12,6 +12,7 @@ import statsRoutes from "./routes/stats.routes.js";
 import { adminAuth } from "./middleware/adminAuth.js";
 import { basicAuth } from "./middleware/basicAuth.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { ensureCashSetup } from "./services/purchase.service.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -53,6 +54,14 @@ app.use("/api/stats", statsRoutes);
 
 app.use(errorHandler);
 
-app.listen(port, () => {
-  console.log(`Konvent ÕIS API listening on port ${port}`);
-});
+ensureCashSetup()
+  .then(() => {
+    app.listen(port, () => {
+      console.log(`Konvent ÕIS API listening on port ${port}`);
+    });
+  })
+  .catch((error) => {
+    console.error("Failed to initialize cash setup:");
+    console.error(error);
+    process.exit(1);
+  });
