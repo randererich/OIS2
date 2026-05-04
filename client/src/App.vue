@@ -64,7 +64,7 @@ onMounted(() => {
 nav {
   position: relative;
   padding-right: 48px;
-  background: var(--menu-table-bg);
+  background: var(--menu-header-bg);
   border: 1px solid var(--border);
   border-left: 0;
   border-right: 0;
