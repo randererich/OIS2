@@ -40,6 +40,44 @@ jobs:
             -e "ssh -p ${{ secrets.VM_PORT || 22 }}" \
             ./ "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/home/debian/OIS2/"
 
+      - name: Write runtime env file on VM
+        shell: bash
+        env:
+          POSTGRES_USER: ${{ vars.POSTGRES_USER || 'konvent' }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB || 'konvent_pos' }}
+          PORT: ${{ vars.PORT || '3000' }}
+          APP_USERNAME: ${{ vars.APP_USERNAME || 'konvent' }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          ADMIN_USERNAME: ${{ vars.ADMIN_USERNAME || 'admin' }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          CLIENT_ORIGIN: ${{ vars.CLIENT_ORIGIN || 'http://localhost:5173' }}
+          CLIENT_ORIGINS: ${{ vars.CLIENT_ORIGINS || 'http://localhost:5173,http://ois2.tartu.vironia.ee:5173,http://ois2.tartu.vironia.ee,https://ois2.tartu.vironia.ee' }}
+          VITE_API_BASE: ${{ vars.VITE_API_BASE || '/api' }}
+        run: |
+          set -euo pipefail
+          : "${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD secret}"
+          : "${APP_PASSWORD:?Missing APP_PASSWORD secret}"
+          : "${ADMIN_PASSWORD:?Missing ADMIN_PASSWORD secret}"
+          ssh -p "${{ secrets.VM_PORT || 22 }}" "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}" << EOF
+          set -euo pipefail
+          cd /home/debian/OIS2
+          cat > .env << ENVVARS
+          POSTGRES_USER=${POSTGRES_USER}
+          POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+          POSTGRES_DB=${POSTGRES_DB}
+          PORT=${PORT}
+          APP_USERNAME=${APP_USERNAME}
+          APP_PASSWORD=${APP_PASSWORD}
+          ADMIN_USERNAME=${ADMIN_USERNAME}
+          ADMIN_PASSWORD=${ADMIN_PASSWORD}
+          CLIENT_ORIGIN=${CLIENT_ORIGIN}
+          CLIENT_ORIGINS=${CLIENT_ORIGINS}
+          VITE_API_BASE=${VITE_API_BASE}
+          ENVVARS
+          chmod 600 .env
+          EOF
+
       - name: Restart services with Docker Compose
         shell: bash
         run: |
