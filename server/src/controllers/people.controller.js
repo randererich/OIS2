@@ -105,6 +105,7 @@ export async function getRecentBuyers(req, res, next) {
        FROM recent r
        JOIN people pe ON pe.id = r.person_id
        LEFT JOIN person_debts pd ON pd.id = pe.id
+       WHERE NOT (lower(pe.first_name) = lower('Sula') AND lower(pe.last_name) = lower('Raha'))
        ORDER BY r.last_purchase_at DESC, pe.last_name ASC, pe.first_name ASC`,
       [minutes]
     );
