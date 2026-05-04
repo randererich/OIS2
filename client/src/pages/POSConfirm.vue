@@ -178,7 +178,8 @@ onUnmounted(() => {
   text-align: center;
 }
 
-[data-theme="dark"] .confirm-balance {
+:global([data-theme="dark"]) .confirm-balance,
+:global([data-theme="dark"]) .confirm-balance strong {
   color: #ffffff;
 }
 
