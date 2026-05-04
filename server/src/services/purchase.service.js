@@ -183,7 +183,7 @@ export async function createPurchase({ personId, productId, quantity, maxPurchas
       const baseComment = comment || product.name;
       const cashUnitPrice = Math.abs(unitPrice) || 1;
       const selectedQuantity = cashOperation === "deposit" ? -amount : amount;
-      const cashQuantity = -selectedQuantity;
+      const cashQuantity = selectedQuantity;
 
       const selectedPurchase = await insertPurchase(client, {
         personId,
