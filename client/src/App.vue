@@ -2,7 +2,6 @@
   <div class="app">
     <header>
       <div class="header-top">
-        <h1>Konvent POS</h1>
         <button class="dark-toggle" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleDark">
           {{ isDark ? '☀️' : '🌙' }}
         </button>

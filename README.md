@@ -1,6 +1,6 @@
-# Konvent POS
+# Konvent ÕIS
 
-Konvent POS is a trust-based student corporation POS system.
+Konvent ÕIS is a trust-based student corporation ÕIS system.
 
 Regular users use a shared computer to:
 - pick a product,
@@ -143,7 +143,7 @@ Stock addition and inventory counting are separated by role:
 - Cancelled purchases are excluded from debt and statistics.
 - Cancelling tracked purchases adds quantity back to stock.
 - Stock can go negative.
-- Product unit is explicit (`tk` or `cl`) and is shown in POS, purchases, debts, inventory and stats.
+- Product unit is explicit (`tk` or `cl`) and is shown in ÕIS, purchases, debts, inventory and stats.
 - Product visibility controls menu visibility.
 - Inventory-tracked flag controls stock deduction on purchase.
 - People visibility controls buyer selection.

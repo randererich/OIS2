@@ -54,5 +54,5 @@ app.use("/api/stats", statsRoutes);
 app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`Konvent POS API listening on port ${port}`);
+  console.log(`Konvent ÕIS API listening on port ${port}`);
 });

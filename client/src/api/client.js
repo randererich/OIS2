@@ -126,7 +126,7 @@ async function readOrPromptRegularAuth(usernamePrompt, passwordPrompt) {
 
   if (!auth) {
     const creds = await requestCredentials({
-      title: "Konvent POS autentimine",
+      title: "Konvent ÕIS autentimine",
       usernameLabel: usernamePrompt,
       passwordLabel: passwordPrompt,
       passwordOnly: false
@@ -224,7 +224,7 @@ export function apiFetch(path, options = {}) {
   return doFetch(
     path,
     options,
-    () => readOrPromptRegularAuth("Konvent POS kasutajanimi:", "Konvent POS parool:"),
+    () => readOrPromptRegularAuth("Konvent ÕIS kasutajanimi:", "Konvent ÕIS parool:"),
     () => {
       clearCookie(REGULAR_AUTH_COOKIE);
     }

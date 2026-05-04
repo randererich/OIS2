@@ -1,5 +1,5 @@
 function unauthorized(res) {
-  res.set("WWW-Authenticate", 'Basic realm="Konvent POS"');
+  res.set("WWW-Authenticate", 'Basic realm="Konvent ÕIS"');
   return res.status(401).json({ error: "Unauthorized" });
 }
 
