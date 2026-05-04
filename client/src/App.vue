@@ -61,7 +61,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+nav {
+  position: relative;
+  padding-right: 48px;
+}
+
 .dark-toggle {
+  position: absolute;
+  right: 10px;
   font-size: 1.3rem;
   padding: 2px 8px;
   border: 1px solid var(--btn-border);
