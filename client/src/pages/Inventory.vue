@@ -89,20 +89,10 @@ function statusInfo(totalExpected, totalCounted) {
     };
   }
 
-  const lossPercent = (Math.abs(difference) / expected) * 100;
-  if (lossPercent <= 5) {
-    return {
-      status: "Väike puudujääk",
-      className: "status-yellow",
-      lossPercent,
-      difference
-    };
-  }
-
   return {
-    status: "Suur puudujääk",
-    className: "status-red",
-    lossPercent,
+    status: "Puudujääk",
+    className: "status-yellow",
+    lossPercent: (Math.abs(difference) / expected) * 100,
     difference
   };
 }
@@ -228,6 +218,10 @@ onMounted(async () => {
 
 [data-theme="dark"] .inventory-row-ok {
   background: #173a20;
+}
+
+[data-theme="dark"] .status-yellow {
+  background: #4a3b12;
 }
 
 [data-theme="dark"] .inventory-row-low {
