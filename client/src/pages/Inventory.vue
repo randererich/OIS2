@@ -221,7 +221,7 @@ onMounted(async () => {
 }
 
 [data-theme="dark"] .status-yellow {
-  background: #4a3b12;
+  background: #937c3e;
 }
 
 [data-theme="dark"] .inventory-row-low {
