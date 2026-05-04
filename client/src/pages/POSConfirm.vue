@@ -173,7 +173,7 @@ onUnmounted(() => {
 }
 
 .confirm-balance {
-  color: #1b1b1b;
+  color: var(--text);
   font-size: 1.2rem;
   text-align: center;
 }
