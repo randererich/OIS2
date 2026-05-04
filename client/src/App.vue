@@ -64,6 +64,9 @@ onMounted(() => {
 nav {
   position: relative;
   padding-right: 48px;
+  background: var(--menu-table-bg);
+  border: 1px solid var(--border);
+  padding: 8px 48px 8px 8px;
 }
 
 .dark-toggle {
