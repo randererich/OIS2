@@ -148,9 +148,9 @@ export async function getInventoryReports(req, res, next) {
          ${valvevarvSql},
          r.comment,
          COUNT(c.id)::INT AS counted_products,
-         COALESCE(SUM(ABS(c.difference)), 0)::INT AS total_absolute_difference,
-         COALESCE(SUM(c.expected_quantity), 0)::INT AS total_expected,
-         COALESCE(SUM(c.counted_quantity), 0)::INT AS total_counted
+         COALESCE(SUM(ABS(c.difference)), 0)::NUMERIC(10,2) AS total_absolute_difference,
+         COALESCE(SUM(c.expected_quantity), 0)::NUMERIC(10,2) AS total_expected,
+         COALESCE(SUM(c.counted_quantity), 0)::NUMERIC(10,2) AS total_counted
        FROM inventory_count_reports r
        LEFT JOIN inventory_counts c ON c.report_id = r.id
        ${whereSql}
@@ -174,7 +174,7 @@ export async function getInventoryReports(req, res, next) {
 export async function getInventoryReportById(req, res, next) {
   try {
     const reportId = Number(req.params.id);
-    if (!reportId) {
+    if (!Number.isInteger(reportId) || reportId <= 0) {
       return res.status(400).json({ error: "valid report id is required" });
     }
 

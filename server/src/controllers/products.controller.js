@@ -159,7 +159,7 @@ export async function updateProduct(req, res, next) {
       sort_order
     } = req.body;
 
-    if (!id || !name || price === undefined || price === null) {
+    if (!Number.isInteger(id) || id <= 0 || !name || price === undefined || price === null) {
       return res.status(400).json({ error: "id, name and price are required" });
     }
 

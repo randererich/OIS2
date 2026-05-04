@@ -46,7 +46,7 @@ export async function updateCategory(req, res, next) {
     const id = Number(req.params.id);
     const { name, emoji, sort_order, is_visible = true } = req.body;
 
-    if (!id || !name) {
+    if (!Number.isInteger(id) || id <= 0 || !name) {
       return res.status(400).json({ error: "id and name are required" });
     }
 

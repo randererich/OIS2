@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS products (
   name TEXT NOT NULL,
   price NUMERIC(10,2) NOT NULL,
   unit TEXT NOT NULL DEFAULT 'tk',
-  stock_quantity INT NOT NULL DEFAULT 0,
+  stock_quantity NUMERIC(10,2) NOT NULL DEFAULT 0,
   is_visible BOOLEAN NOT NULL DEFAULT TRUE,
   is_inventory_tracked BOOLEAN NOT NULL DEFAULT TRUE,
   sort_order INT NOT NULL DEFAULT 0,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS purchases (
   id SERIAL PRIMARY KEY,
   person_id INT NOT NULL REFERENCES people(id),
   product_id INT NOT NULL REFERENCES products(id),
-  quantity INT NOT NULL CHECK (quantity <> 0),
+  quantity NUMERIC(10,2) NOT NULL CHECK (quantity <> 0),
   unit_price NUMERIC(10,2) NOT NULL,
   total_price NUMERIC(10,2) NOT NULL,
   comment TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS payments (
 CREATE TABLE IF NOT EXISTS inventory_movements (
   id SERIAL PRIMARY KEY,
   product_id INT NOT NULL REFERENCES products(id),
-  quantity_change INT NOT NULL CHECK (quantity_change <> 0),
+  quantity_change NUMERIC(10,2) NOT NULL CHECK (quantity_change <> 0),
   reason TEXT NOT NULL,
   comment TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -93,9 +93,9 @@ CREATE TABLE IF NOT EXISTS inventory_counts (
   id SERIAL PRIMARY KEY,
   report_id INT,
   product_id INT NOT NULL REFERENCES products(id),
-  expected_quantity INT NOT NULL,
-  counted_quantity INT NOT NULL,
-  difference INT NOT NULL,
+  expected_quantity NUMERIC(10,2) NOT NULL,
+  counted_quantity NUMERIC(10,2) NOT NULL,
+  difference NUMERIC(10,2) NOT NULL,
   comment TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -160,10 +160,15 @@ LEFT JOIN (
 ) payments ON payments.person_id = p.id;
 
 CREATE INDEX IF NOT EXISTS idx_people_visible_sort ON people (is_visible, sort_order, last_name, first_name);
+CREATE INDEX IF NOT EXISTS idx_people_name_search ON people (last_name, first_name) WHERE is_visible = TRUE;
 CREATE INDEX IF NOT EXISTS idx_categories_visible_sort ON categories (is_visible, sort_order, name);
+CREATE INDEX IF NOT EXISTS idx_categories_name ON categories (name) WHERE is_visible = TRUE;
 CREATE INDEX IF NOT EXISTS idx_products_category_sort ON products (category_id, is_visible, sort_order, name);
+CREATE INDEX IF NOT EXISTS idx_products_name ON products (name) WHERE is_visible = TRUE;
 CREATE INDEX IF NOT EXISTS idx_purchases_person ON purchases (person_id, is_cancelled);
+CREATE INDEX IF NOT EXISTS idx_purchases_person_created ON purchases (person_id, created_at) WHERE is_cancelled = FALSE;
 CREATE INDEX IF NOT EXISTS idx_purchases_product ON purchases (product_id, is_cancelled);
 CREATE INDEX IF NOT EXISTS idx_payments_person ON payments (person_id);
+CREATE INDEX IF NOT EXISTS idx_payments_created ON payments (created_at);
 CREATE INDEX IF NOT EXISTS idx_purchases_created_at ON purchases (created_at, is_cancelled);
 CREATE INDEX IF NOT EXISTS idx_inventory_counts_report ON inventory_counts (report_id);

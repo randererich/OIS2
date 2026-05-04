@@ -36,7 +36,7 @@ export async function getPeople(req, res, next) {
          WHERE CONCAT(first_name, ' ', last_name) ILIKE $1
             OR COALESCE(coetus, '') ILIKE $1
             OR COALESCE(konvent, '') ILIKE $1
-         ORDER BY sort_order ASC, coetus ASC NULLS LAST, last_name ASC, first_name ASC
+         ORDER BY ${COETUS_SORT_SQL}, last_name ASC, first_name ASC
          LIMIT 200`,
         [`%${q}%`]
       );
@@ -46,7 +46,7 @@ export async function getPeople(req, res, next) {
     const result = await query(
       `SELECT *
        FROM people
-       ORDER BY sort_order ASC, coetus ASC NULLS LAST, last_name ASC, first_name ASC`
+       ORDER BY ${COETUS_SORT_SQL}, last_name ASC, first_name ASC`
     );
     res.json(result.rows);
   } catch (error) {
@@ -177,7 +177,7 @@ export async function getPersonMonthlyPurchases(req, res, next) {
       `SELECT
          pu.product_id,
          pr.name AS product_name,
-         SUM(pu.quantity)::INT AS total_quantity,
+         SUM(pu.quantity)::NUMERIC(10,2) AS total_quantity,
          SUM(pu.total_price)::NUMERIC(10,2) AS total_sum
        FROM purchases pu
        JOIN products pr ON pr.id = pu.product_id

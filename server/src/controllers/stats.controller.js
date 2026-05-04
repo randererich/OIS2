@@ -56,7 +56,7 @@ export async function getTopSpenders(req, res, next) {
          pe.first_name,
          pe.last_name,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_spent,
-         COALESCE(SUM(pu.quantity), 0)::INT AS total_items
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_items
        FROM people pe
        JOIN purchases pu ON pu.person_id = pe.id
        WHERE pu.is_cancelled = FALSE
@@ -83,7 +83,7 @@ export async function getTopItemCounts(req, res, next) {
          pe.id,
          pe.first_name,
          pe.last_name,
-         COALESCE(SUM(pu.quantity), 0)::INT AS total_items,
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_items,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_spent
        FROM people pe
        JOIN purchases pu ON pu.person_id = pe.id
@@ -115,7 +115,7 @@ export async function getTopProductsByQuantity(req, res, next) {
          pr.id,
          pr.name,
         ${unitSql},
-         COALESCE(SUM(pu.quantity), 0)::INT AS total_quantity,
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_quantity,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_revenue
        FROM products pr
        JOIN purchases pu ON pu.product_id = pr.id
@@ -148,7 +148,7 @@ export async function getTopProductsByRevenue(req, res, next) {
          pr.name,
         ${unitSql},
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_revenue,
-         COALESCE(SUM(pu.quantity), 0)::INT AS total_quantity
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_quantity
        FROM products pr
        JOIN purchases pu ON pu.product_id = pr.id
        WHERE pu.is_cancelled = FALSE
@@ -185,7 +185,7 @@ export async function getProductBuyers(req, res, next) {
          pe.first_name,
          pe.last_name,
         ${unitSql},
-         COALESCE(SUM(pu.quantity), 0)::INT AS amount,
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS amount,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_spent
        FROM purchases pu
        JOIN products pr ON pr.id = pu.product_id
@@ -221,7 +221,7 @@ export async function getCategoryBuyers(req, res, next) {
          pe.id,
          pe.first_name,
          pe.last_name,
-         COALESCE(SUM(pu.quantity), 0)::INT AS amount,
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS amount,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_spent
        FROM purchases pu
        JOIN products pr ON pr.id = pu.product_id
@@ -256,7 +256,7 @@ export async function getMonthTopSpenders(req, res, next) {
          pe.first_name,
          pe.last_name,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_spent,
-         COALESCE(SUM(pu.quantity), 0)::INT AS total_items
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_items
        FROM purchases pu
        JOIN people pe ON pe.id = pu.person_id
        WHERE pu.is_cancelled = FALSE
@@ -292,7 +292,7 @@ export async function getMonthTopProducts(req, res, next) {
          pr.id,
          pr.name,
         ${unitSql},
-         COALESCE(SUM(pu.quantity), 0)::INT AS total_quantity,
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_quantity,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_revenue
        FROM purchases pu
        JOIN products pr ON pr.id = pu.product_id
