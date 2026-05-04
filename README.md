@@ -1,95 +1,204 @@
 # Konvent ÕIS
 
-Konvent ÕIS is a trust-based student corporation ÕIS system.
+Konvent ÕIS is a trust-based purchase, debt, stock and inventory system for a shared computer.
 
-Regular users use a shared computer to:
-- pick a product,
-- enter quantity,
-- select a person,
-- add optional comment,
-- save purchase.
-
-Purchases increase personal debt and decrease stock only for inventory-tracked products.
+Regular users can select a product, enter a quantity or cash amount, select a person, add an optional comment, and save the record. Admin users manage products, categories, people, inventory and mistaken purchase cancellations.
 
 ## Stack
 
 - Client: Vue 3, Vite, Pinia, Vue Router
 - Server: Node.js, Express
 - Database: PostgreSQL
-- Auth: HTTP Basic Auth (regular + admin credentials)
+- Auth: shared HTTP Basic Auth credentials
+- Runtime: Docker Compose
 
-## Auth Model
+## Quick Start
 
-There is no personal login account system.
+Start the full app with Docker:
 
-The app uses two shared HTTP Basic Auth credential sets:
+```bash
+docker compose up -d --build
+```
 
-- Regular credentials:
-  - `APP_USERNAME`
-  - `APP_PASSWORD`
-- Admin credentials:
-  - `ADMIN_USERNAME`
-  - `ADMIN_PASSWORD`
+Open:
 
-Regular auth is used for normal app API calls.
-Admin auth is required for `/api/admin/*` endpoints and `/admin` frontend routes.
+- client: `http://localhost:5173`
+- server health: `http://localhost:3000/api/health`
+- database: `localhost:5433`
 
-## Setup
- 
-1. Start database:
-   - `docker compose up -d`
-2. Apply schema:
-   - `psql postgresql://konvent:konvent@localhost:5433/konvent_pos -f database/schema.sql`
-3. Seed sample data:
-   - `psql postgresql://konvent:konvent@localhost:5433/konvent_pos -f database/seed.sql`
-4. Start server:
-   - `cd server`
-   - `cp .env.example .env`
-   - `npm install`
-   - `npm run dev`
-5. Start client in another terminal:
-   - `cd client`
-   - `npm install`
-   - `npm run dev`
-6. Open `http://localhost:5173`
+For a fresh database, initialize schema and seed data:
 
-If local `psql` is missing, import SQL through Docker:
-- `cat database/schema.sql | docker compose exec -T db psql -U konvent -d konvent_pos`
-- `cat database/seed.sql | docker compose exec -T db psql -U konvent -d konvent_pos`
+```bash
+cat database/schema.sql | docker compose exec -T db psql -U konvent -d konvent_pos
+cat database/seed.sql | docker compose exec -T db psql -U konvent -d konvent_pos
+```
 
-## Environment Variables
+Useful Docker commands:
 
-`server/.env`:
+```bash
+docker compose ps
+docker compose logs -f server
+docker compose logs -f client
+docker compose logs -f db
+docker compose restart server
+docker compose up -d --build
+```
 
-- `PORT=3000`
-- `DATABASE_URL=postgresql://konvent:konvent@localhost:5433/konvent_pos`
-- `APP_USERNAME=konvent`
-- `APP_PASSWORD=MirtelPohlaTissid`
-- `ADMIN_USERNAME=admin`
-- `ADMIN_PASSWORD=admin`
-- `CLIENT_ORIGIN=http://localhost:5173`
+Reset local database data:
 
-## Regular Routes (Frontend)
+```bash
+docker compose down -v
+docker compose up -d --build
+cat database/schema.sql | docker compose exec -T db psql -U konvent -d konvent_pos
+cat database/seed.sql | docker compose exec -T db psql -U konvent -d konvent_pos
+```
+
+Warning: `docker compose down -v` deletes the database volume.
+
+## Configuration
+
+Docker Compose reads `.env` from the repository root if present.
+
+Common variables:
+
+```text
+POSTGRES_USER=konvent
+POSTGRES_PASSWORD=change-me
+POSTGRES_DB=konvent_pos
+PORT=3000
+APP_USERNAME=konvent
+APP_PASSWORD=change-me
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=change-me
+CLIENT_ORIGIN=http://localhost:5173
+CLIENT_ORIGINS=http://localhost:5173,http://ois2.tartu.vironia.ee:5173,http://ois2.tartu.vironia.ee,https://ois2.tartu.vironia.ee
+VITE_API_BASE=/api
+```
+
+Auth model:
+
+- regular API calls use `APP_USERNAME` / `APP_PASSWORD`
+- `/api/admin/*` calls and admin pages use `ADMIN_USERNAME` / `ADMIN_PASSWORD`
+- there are no personal login accounts
+
+## Running Without Docker
+
+Server:
+
+```bash
+cd server
+npm install
+npm run dev
+```
+
+Client:
+
+```bash
+cd client
+npm install
+npm run dev
+```
+
+For non-Docker server use, set:
+
+```text
+DATABASE_URL=postgresql://konvent:konvent@localhost:5433/konvent_pos
+```
+
+The Docker client uses Vite proxy `/api -> http://server:3000`, configured in `client/vite.config.js`.
+
+## Main Workflows
+
+### Purchase Entry
+
+Routes:
+
+1. `/` select product
+2. `/quantity` enter quantity or cash amount
+3. `/person` select person
+4. `/confirm` save purchase
+
+Rules:
+
+- quantity cannot be `0`
+- normal products require integer quantity
+- a single normal purchase is limited to 100 items
+- negative normal quantities are allowed as corrections
+- inventory-tracked products reduce stock automatically
+- purchases are not deleted; admin users cancel mistakes
+
+### Cash Operations
+
+The old `REPART` category is migrated to `Sularaha`.
+
+`Sularaha` contains:
+
+- `Sissemakse`
+- `Väljamakse`
+
+For cash operations, the quantity screen becomes a sum screen and decimal amounts are allowed.
+
+Rules:
+
+- `Sissemakse`: selected person's debt decreases and `Sula Raha` balance decreases
+- `Väljamakse`: selected person's debt increases and `Sula Raha` balance increases
+- `Sula Raha` is created automatically if missing
+- `Sula Raha` is hidden from "Viimase 20 minuti ostjad"
+
+### Debts
+
+Debt is calculated dynamically:
+
+```text
+debt = non-cancelled purchase totals - payments
+```
+
+Positive debt means the person owes money. Negative debt means the person has money over.
+
+### Inventory
+
+Regular inventory page:
+
+- route: `/inventory`
+- requires `Valvevärv`
+- saves per-product counted quantities and comments
+- row is green when counted stock is equal to or greater than expected
+- row is red when counted stock is lower than expected
+- summary is yellow when total difference is negative
+
+Admin inventory page:
+
+- route: `/admin/inventory`
+- shows current stock
+- supports incoming stock additions
+- shows recent inventory reports
+
+## Frontend Routes
+
+Regular:
 
 - `/` Pane kirja
 - `/quantity`
 - `/person`
 - `/confirm`
-- `/debts` Võlad
-- `/purchases` Kirjed
-- `/stats` Statistika
-- `/inventory` Inventuur
+- `/debts`
+- `/purchases`
+- `/stats`
+- `/inventory`
 
-## Admin Routes (Frontend)
+Admin:
 
 - `/admin`
 - `/admin/products`
 - `/admin/categories`
 - `/admin/people`
-- `/admin/inventory` (varud + varu lisamine + viimased inventuurid)
+- `/admin/inventory`
 - `/admin/purchases`
+- `/admin/password`
 
-## Regular API Highlights
+## API Highlights
+
+Regular:
 
 - `GET /api/products/menu`
 - `GET /api/people/visible`
@@ -101,14 +210,17 @@ If local `psql` is missing, import SQL through Docker:
 - `GET /api/payments/debts`
 - `GET /api/stats/*`
 
-## Admin API Highlights
+Admin:
 
+- `GET /api/admin/products`
 - `POST /api/admin/products`
 - `PUT /api/admin/products/:id`
 - `DELETE /api/admin/products/:id`
+- `GET /api/admin/categories`
 - `POST /api/admin/categories`
 - `PUT /api/admin/categories/:id`
 - `DELETE /api/admin/categories/:id`
+- `GET /api/admin/people`
 - `POST /api/admin/people`
 - `PUT /api/admin/people/:id`
 - `DELETE /api/admin/people/:id`
@@ -118,34 +230,180 @@ If local `psql` is missing, import SQL through Docker:
 - `GET /api/admin/inventory/reports?limit=14`
 - `GET /api/admin/inventory/reports/:id`
 
-## Inventory Workflow
+## How To Change Things
 
-Stock addition and inventory counting are separated by role:
+Top navigation, top bar background and light/dark button:
 
-- Regular inventory (`/inventory`):
-  - daily inventory counting and report saving only
-  - requires `Valvevärv` and supports per-row comments
-  - shows dynamic inventory status (green/yellow/red) based on difference
-  - updates stock via transactional report save
+- `client/src/App.vue`
 
-- Admin inventory (`/admin/inventory`):
-  - shows current stock overview
-  - supports incoming stock adds via `inventory/movement` with reason `stock_add`
-  - shows last 14 inventory reports with status and detail modal
+Theme colors, table colors, app spacing and global styles:
 
-## Important Business Rules
+- `client/src/style.css`
 
-- Old purchases keep original unit price.
-- Quantity `0` is rejected; negative quantities are allowed as corrections.
-- Purchase/debt/statistics views mark negative quantity rows as `Parandus`.
-- Debt is calculated from purchases and payments (not stored directly).
-- Purchases are not deleted; mistakes are cancelled.
-- Cancelled purchases are excluded from debt and statistics.
-- Cancelling tracked purchases adds quantity back to stock.
-- Stock can go negative.
-- Product unit is explicit (`tk` or `cl`) and is shown in ÕIS, purchases, debts, inventory and stats.
-- Product visibility controls menu visibility.
-- Inventory-tracked flag controls stock deduction on purchase.
-- People visibility controls buyer selection.
-- Product menu order uses `products.sort_order`.
-- Frequent buyers can be prioritized via `people.sort_order`.
+Product menu/category table rendering:
+
+- `client/src/components/ProductCategoryTable.vue`
+
+Quantity and cash amount entry screen:
+
+- `client/src/pages/POSQuantity.vue`
+
+Confirm page and saved balance text:
+
+- `client/src/pages/POSConfirm.vue`
+
+Auth popup styling:
+
+- `client/src/api/client.js`
+
+Purchase validation and API handling:
+
+- `server/src/controllers/purchases.controller.js`
+- `server/src/services/purchase.service.js`
+
+Cash setup and cash double-entry logic:
+
+- `server/src/services/purchase.service.js`
+- `server/src/controllers/products.controller.js`
+
+Recent buyers query:
+
+- `server/src/controllers/people.controller.js`
+
+Inventory colors:
+
+- `client/src/pages/Inventory.vue`
+- `client/src/pages/admin/AdminInventoryCount.vue`
+
+Database schema and seed data:
+
+- `database/schema.sql`
+- `database/seed.sql`
+
+Use idempotent SQL for schema changes when possible: `CREATE TABLE IF NOT EXISTS`, `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, and guarded inserts. Production data lives in a Docker volume, so editing `schema.sql` alone does not change an existing production database unless the SQL is run or the server performs startup compatibility work.
+
+## Deployment
+
+Deployment is handled by:
+
+```text
+.github/workflows/deploy-vm.yml
+```
+
+On push to `main`, or manual workflow dispatch:
+
+1. GitHub Actions checks out the repository.
+2. It SSHes to the VM.
+3. It syncs files to `/home/debian/OIS2/`.
+4. It writes `/home/debian/OIS2/.env`.
+5. It runs:
+
+```bash
+docker compose down || true
+docker compose up -d --build
+```
+
+Production uses `docker-compose.yml`; there is no separate production compose file.
+
+Required GitHub Secrets:
+
+- `VM_HOST`
+- `VM_USER`
+- `VM_SSH_KEY`
+- `POSTGRES_PASSWORD`
+- `APP_PASSWORD`
+- `ADMIN_PASSWORD`
+
+Optional secret:
+
+- `VM_PORT`
+
+Supported GitHub Variables:
+
+- `POSTGRES_USER`
+- `POSTGRES_DB`
+- `PORT`
+- `APP_USERNAME`
+- `ADMIN_USERNAME`
+- `CLIENT_ORIGIN`
+- `CLIENT_ORIGINS`
+- `VITE_API_BASE`
+
+More deployment detail is in `DEPLOYMENT.md`.
+
+## Production Operations
+
+SSH to the VM:
+
+```bash
+ssh debian@your-host
+cd /home/debian/OIS2
+```
+
+Check status and logs:
+
+```bash
+docker compose ps
+docker logs konvent-pos-server
+docker logs konvent-pos-client
+docker logs konvent-pos-db
+docker compose logs -f server
+```
+
+Open database shell:
+
+```bash
+docker compose exec db psql -U konvent -d konvent_pos
+```
+
+Backup database:
+
+```bash
+mkdir -p backups
+docker compose exec -T db pg_dump -U konvent konvent_pos > backups/konvent_pos_$(date +%Y%m%d_%H%M%S).sql
+```
+
+Restore into an empty database:
+
+```bash
+cat backup.sql | docker compose exec -T db psql -U konvent -d konvent_pos
+```
+
+## Troubleshooting
+
+Client logs show Vite proxy `ECONNREFUSED`:
+
+```text
+http proxy error: /api/products/menu
+Error: connect ECONNREFUSED server:3000
+```
+
+This usually means the server crashed or has not started. Check:
+
+```bash
+docker logs konvent-pos-server
+docker compose ps
+```
+
+Common server startup problems:
+
+- bad `.env`
+- database connection failure
+- production database schema is older than the code expects
+- startup compatibility SQL failed
+
+Rollback:
+
+1. Revert the bad commit.
+2. Push to `main`.
+3. Let GitHub Actions redeploy.
+
+Manual VM edits are overwritten by the next GitHub Actions deploy.
+
+## Safety Notes
+
+- do not commit `.env`
+- do not commit private SSH keys
+- keep production passwords in GitHub Secrets
+- do not run `docker compose down -v` on production unless you intentionally want to delete the database
+- use admin cancellation instead of deleting purchase history
