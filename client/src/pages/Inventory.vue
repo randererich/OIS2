@@ -152,7 +152,7 @@ function rowClass(product) {
   if (!Number.isFinite(countedValue)) {
     return "";
   }
-  return statusInfo(expected, countedValue).className;
+  return countedValue >= expected ? "inventory-row-ok" : "inventory-row-low";
 }
 
 async function saveReport() {
@@ -216,5 +216,21 @@ onMounted(async () => {
 
 .status-red {
   background: #fde8e8;
+}
+
+.inventory-row-ok {
+  background: #e5f6e5;
+}
+
+.inventory-row-low {
+  background: #fde8e8;
+}
+
+[data-theme="dark"] .inventory-row-ok {
+  background: #173a20;
+}
+
+[data-theme="dark"] .inventory-row-low {
+  background: #3d1d1d;
 }
 </style>

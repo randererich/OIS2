@@ -23,7 +23,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="product in products" :key="product.id">
+        <tr v-for="product in products" :key="product.id" :class="rowClass(product)">
           <td>{{ product.category_name || '-' }}</td>
           <td>{{ product.name }}</td>
           <td>{{ product.expected_quantity }}</td>
@@ -67,6 +67,15 @@ async function loadProducts() {
   } catch (err) {
     error.value = err.message;
   }
+}
+
+function rowClass(product) {
+  const expected = Number(product.expected_quantity || 0);
+  const countedValue = Number(counted[product.id] || "0");
+  if (!Number.isFinite(countedValue)) {
+    return "";
+  }
+  return countedValue >= expected ? "inventory-row-ok" : "inventory-row-low";
 }
 
 async function saveReport() {
@@ -114,3 +123,21 @@ async function saveReport() {
 
 onMounted(loadProducts);
 </script>
+
+<style scoped>
+.inventory-row-ok {
+  background: #e5f6e5;
+}
+
+.inventory-row-low {
+  background: #fde8e8;
+}
+
+[data-theme="dark"] .inventory-row-ok {
+  background: #173a20;
+}
+
+[data-theme="dark"] .inventory-row-low {
+  background: #3d1d1d;
+}
+</style>
