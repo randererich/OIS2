@@ -24,17 +24,20 @@ function clearCookie(name) {
 
 function requestCredentials({ title, usernameLabel, passwordLabel, passwordOnly = false }) {
   return new Promise((resolve) => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
     const overlay = document.createElement("div");
     overlay.style.position = "fixed";
     overlay.style.inset = "0";
-    overlay.style.background = "rgba(0, 0, 0, 0.45)";
+    overlay.style.background = isDark ? "rgba(0, 0, 0, 0.68)" : "rgba(0, 0, 0, 0.45)";
     overlay.style.display = "flex";
     overlay.style.alignItems = "center";
     overlay.style.justifyContent = "center";
     overlay.style.zIndex = "9999";
 
     const panel = document.createElement("form");
-    panel.style.background = "#fff";
+    panel.style.background = isDark ? "var(--panel-bg)" : "#fff";
+    panel.style.color = isDark ? "var(--text)" : "#1b1b1b";
+    panel.style.border = isDark ? "1px solid var(--border)" : "none";
     panel.style.padding = "20px";
     panel.style.borderRadius = "10px";
     panel.style.minWidth = "320px";
