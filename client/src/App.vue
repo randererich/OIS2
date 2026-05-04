@@ -70,6 +70,7 @@ onMounted(() => {
 
 .dark-toggle {
   position: absolute;
+  top: 4px;
   right: 0;
   font-size: 1.3rem;
   padding: 4px 8px;
