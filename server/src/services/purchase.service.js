@@ -6,6 +6,10 @@ const CASH_ACCOUNT_LAST_NAME = "Raha";
 export async function ensureCashSetup() {
   await transaction(async (client) => {
     await client.query(
+      "ALTER TABLE products ADD COLUMN IF NOT EXISTS unit TEXT NOT NULL DEFAULT 'tk'"
+    );
+
+    await client.query(
       `UPDATE categories
        SET name = 'Sularaha',
            emoji = '💶'
