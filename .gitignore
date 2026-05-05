@@ -27,3 +27,5 @@ pnpm-debug.log*
 # Database artifacts
 database/*.sqlite
 database/*.db
+
+database/*.csv

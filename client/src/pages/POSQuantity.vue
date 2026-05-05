@@ -13,7 +13,7 @@
 
     <label class="pos-quantity-input-wrap">
       {{ isCashOperation ? 'Summa' : 'Kogus' }}
-      <input ref="quantityInput" class="pos-quantity-input" v-model="inputValue" inputmode="text" />
+      <input ref="quantityInput" class="pos-quantity-input" v-model="inputValue" inputmode="decimal" autocomplete="off" spellcheck="false" />
     </label>
 
     <NumberPad
@@ -54,16 +54,21 @@ function sanitizeRawInput(raw) {
 
   const negative = trimmed.startsWith("-");
   const cleaned = trimmed.replace(/^-/, "").replace(/[^\d.]/g, "");
-  
-  // Remove all but the first decimal point
-  const parts = cleaned.split(".");
-  const sanitized = parts[0] + (parts.length > 1 ? "." + parts.slice(1).join("").replace(/\./g, "") : "");
-  
-  if (!sanitized || sanitized === ".") {
+
+  if (!cleaned) {
     return negative ? "-" : "";
   }
 
-  const normalized = String(Number(sanitized));
+  const [integerPartRaw, ...fractionParts] = cleaned.split(".");
+  const integerPart = integerPartRaw.replace(/^0+(?=\d)/, "") || "0";
+  const fractionPart = fractionParts.join("").replace(/\./g, "");
+  const hasDecimalPoint = cleaned.includes(".");
+  const normalized = hasDecimalPoint ? `${integerPart}.${fractionPart}` : integerPart;
+
+  if (normalized === "0" && !hasDecimalPoint && integerPartRaw === "") {
+    return negative ? "-" : "";
+  }
+
   return negative ? `-${normalized}` : normalized;
 }
 
@@ -112,7 +117,7 @@ function toggleSign() {
   }
 
   const normalized = sanitizeRawInput(inputValue.value);
-  if (!normalized || normalized === "0" || normalized === "0.0") {
+  if (!normalized || Number(normalized) === 0) {
     inputValue.value = "1";
     isDefaultEntry.value = true;
     return;
@@ -125,14 +130,15 @@ function toggleSign() {
 
 function backspace() {
   if (isDefaultEntry.value) {
-    inputValue.value = "1";
+    inputValue.value = "";
+    isDefaultEntry.value = false;
     return;
   }
 
   inputValue.value = inputValue.value.slice(0, -1);
-  if (!inputValue.value || inputValue.value === "-") {
-    inputValue.value = "1";
-    isDefaultEntry.value = true;
+  if (inputValue.value === "-") {
+    inputValue.value = "";
+    isDefaultEntry.value = false;
   }
 }
 
@@ -146,11 +152,6 @@ function nextStep() {
 
   if (isCashOperation.value && quantity < 0) {
     error.value = "Summa peab olema positiivne.";
-    return;
-  }
-
-  if (!isCashOperation.value && !Number.isInteger(quantity)) {
-    error.value = "Palun sisesta korrektne täisarvuline kogus (mitte 0).";
     return;
   }
 
@@ -235,9 +236,14 @@ onUnmounted(() => {
 // Normalize manual keyboard edits and preserve the "replace first number" behavior.
 function handleManualInput() {
   const normalized = sanitizeRawInput(inputValue.value);
-  if (!normalized || normalized === "-") {
-    inputValue.value = "1";
-    isDefaultEntry.value = true;
+  if (normalized === "") {
+    isDefaultEntry.value = false;
+    return;
+  }
+
+  if (normalized === "-") {
+    inputValue.value = "";
+    isDefaultEntry.value = false;
     return;
   }
 
@@ -255,6 +261,7 @@ watch(inputValue, () => {
 <style scoped>
 .pos-quantity-page {
   align-items: center;
+  gap: 1.2rem;
 }
 
 .pos-quantity-title {
@@ -272,15 +279,23 @@ watch(inputValue, () => {
 }
 
 .pos-quantity-input-wrap {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 440px;
   font-size: 1.45rem;
+  gap: 0.6rem;
 }
 
 .pos-quantity-input {
   text-align: center;
   font-size: 2.7rem;
   padding: 16px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  border-radius: 20px;
+  border: 1px solid rgba(13, 31, 48, 0.16);
+  box-shadow: 0 10px 24px rgba(13, 31, 48, 0.08);
 }
 
 .pos-quantity-pad {
@@ -291,11 +306,6 @@ watch(inputValue, () => {
 .pos-quantity-pad :deep(.number-pad) {
   max-width: 520px;
   margin: 0 auto;
-}
-
-.pos-quantity-pad :deep(.number-pad button) {
-  font-size: 2rem;
-  padding: 22px;
 }
 
 .pos-quantity-big-button {
