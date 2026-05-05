@@ -24,7 +24,8 @@ const clientOrigins = (process.env.CLIENT_ORIGINS || process.env.CLIENT_ORIGIN |
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || clientOrigins.includes(origin)) {
+      // Allow no origin, literal "null" origin, or any whitelisted origin
+      if (!origin || origin === "null" || clientOrigins.includes(origin)) {
         return callback(null, true);
       }
 
