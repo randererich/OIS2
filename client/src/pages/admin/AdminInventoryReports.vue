@@ -62,6 +62,7 @@
           <th>Kommentaar</th>
           <th>Tooteid</th>
           <th>Koguerinevus (abs)</th>
+          <th>Sularaha</th>
           <th>Staatus</th>
           <th>Tegevus</th>
         </tr>
@@ -73,6 +74,7 @@
           <td>{{ report.comment || '-' }}</td>
           <td>{{ report.counted_products }}</td>
           <td>{{ report.total_absolute_difference }}</td>
+          <td>{{ money(report.cash_counted) }}</td>
           <td :class="statusClass(report.status_color)">{{ report.status }}</td>
           <td>
             <button type="button" @click="loadDetail(report.id)">Ava</button>
@@ -91,6 +93,7 @@
         <p>
           {{ formatDate(detail.report.created_at) }} |
           Valvevärv: <strong>{{ detail.report.valvevarv }}</strong> |
+          Sularaha: <strong>{{ money(detail.report.cash_counted) }}</strong> |
           {{ detail.report.comment || '-' }}
         </p>
         <p :class="statusClass(detail.report.status_color)"><strong>{{ detail.report.status }}</strong></p>
@@ -142,6 +145,10 @@ const stockAdd = ref({
 
 function formatDate(value) {
   return new Date(value).toLocaleString("et-EE");
+}
+
+function money(value) {
+  return `${Number(value || 0).toFixed(2)} €`;
 }
 
 function statusClass(color) {

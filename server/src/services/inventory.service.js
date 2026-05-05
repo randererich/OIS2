@@ -33,8 +33,12 @@ export async function addInventoryMovement({ productId, quantityChange, reason, 
 
 export async function createInventoryReport({ comment, valvevarv, counts, cash_counted }) {
   return transaction(async (client) => {
+    await client.query(
+      "ALTER TABLE inventory_count_reports ADD COLUMN IF NOT EXISTS cash_counted NUMERIC(10,2) NOT NULL DEFAULT 0"
+    );
+
     const hasValvevarv = await hasTableColumn("inventory_count_reports", "valvevarv");
-    const hasCashCounted = await hasTableColumn("inventory_count_reports", "cash_counted");
+    const hasCashCounted = true;
 
     let reportResult;
     let reportColumns = ["valvevarv", "comment"];

@@ -15,7 +15,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import { ensureCashSetup } from "./services/purchase.service.js";
 
 const app = express();
-const port = Number(process.env.PORT) || 3000;
+const port = Number(process.env.PORT) || 3001;
 const clientOrigins = (process.env.CLIENT_ORIGINS || process.env.CLIENT_ORIGIN || "http://localhost:5173")
   .split(",")
   .map((origin) => origin.trim())
@@ -24,8 +24,7 @@ const clientOrigins = (process.env.CLIENT_ORIGINS || process.env.CLIENT_ORIGIN |
 app.use(
   cors({
     origin(origin, callback) {
-      // Allow no origin, literal "null" origin, or any whitelisted origin
-      if (!origin || origin === "null" || clientOrigins.includes(origin)) {
+      if (!origin || clientOrigins.includes(origin)) {
         return callback(null, true);
       }
 

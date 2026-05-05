@@ -138,8 +138,11 @@ function reportStatus(totalExpected, totalCounted) {
 export async function getInventoryReports(req, res, next) {
   try {
     const hasValvevarv = await hasTableColumn("inventory_count_reports", "valvevarv");
+    const hasCashCounted = await hasTableColumn("inventory_count_reports", "cash_counted");
     const valvevarvSql = hasValvevarv ? "r.valvevarv" : "'Määramata'::TEXT AS valvevarv";
     const valvevarvGroupBy = hasValvevarv ? ", r.valvevarv" : "";
+    const cashCountedSql = hasCashCounted ? "r.cash_counted" : "0::NUMERIC(10,2) AS cash_counted";
+    const cashCountedGroupBy = hasCashCounted ? ", r.cash_counted" : "";
 
     const defaultLimit = req.baseUrl.startsWith("/api/admin") ? 14 : 50;
     const requestedLimit = Number.parseInt(String(req.query.limit || defaultLimit), 10);
@@ -170,6 +173,7 @@ export async function getInventoryReports(req, res, next) {
          r.id,
          r.created_at,
          ${valvevarvSql},
+         ${cashCountedSql},
          r.comment,
          COUNT(c.id)::INT AS counted_products,
          COALESCE(SUM(ABS(c.difference)), 0)::NUMERIC(10,2) AS total_absolute_difference,
@@ -178,7 +182,7 @@ export async function getInventoryReports(req, res, next) {
        FROM inventory_count_reports r
        LEFT JOIN inventory_counts c ON c.report_id = r.id
        ${whereSql}
-       GROUP BY r.id, r.created_at${valvevarvGroupBy}, r.comment
+       GROUP BY r.id, r.created_at${valvevarvGroupBy}${cashCountedGroupBy}, r.comment
        ORDER BY r.created_at DESC
        LIMIT $1`,
       params
@@ -203,9 +207,10 @@ export async function getInventoryReportById(req, res, next) {
     }
 
     const hasValvevarv = await hasTableColumn("inventory_count_reports", "valvevarv");
+    const hasCashCounted = await hasTableColumn("inventory_count_reports", "cash_counted");
     const reportSelect = hasValvevarv
-      ? "id, created_at, valvevarv, comment"
-      : "id, created_at, 'Määramata'::TEXT AS valvevarv, comment";
+      ? `id, created_at, valvevarv, comment, ${hasCashCounted ? "cash_counted" : "0::NUMERIC(10,2) AS cash_counted"}`
+      : `id, created_at, 'Määramata'::TEXT AS valvevarv, comment, ${hasCashCounted ? "cash_counted" : "0::NUMERIC(10,2) AS cash_counted"}`;
 
     const reportResult = await query(
       `SELECT ${reportSelect}

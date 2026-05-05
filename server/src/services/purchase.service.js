@@ -12,6 +12,21 @@ export async function ensureCashSetup() {
     );
 
     await client.query(
+      `DO $$
+       BEGIN
+         IF EXISTS (
+           SELECT 1
+           FROM information_schema.tables
+           WHERE table_schema = 'public'
+             AND table_name = 'inventory_count_reports'
+         ) THEN
+           ALTER TABLE inventory_count_reports
+           ADD COLUMN IF NOT EXISTS cash_counted NUMERIC(10,2) NOT NULL DEFAULT 0;
+         END IF;
+       END $$`
+    );
+
+    await client.query(
       `UPDATE categories
        SET name = 'Sularaha',
            emoji = '💶'

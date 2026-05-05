@@ -137,6 +137,9 @@ WHERE NOT EXISTS (
 ALTER TABLE inventory_count_reports
 ADD COLUMN IF NOT EXISTS valvevarv TEXT;
 
+ALTER TABLE inventory_count_reports
+ADD COLUMN IF NOT EXISTS cash_counted NUMERIC(10,2) NOT NULL DEFAULT 0;
+
 UPDATE inventory_count_reports
 SET valvevarv = 'Määramata'
 WHERE valvevarv IS NULL;

@@ -17,7 +17,6 @@
         <tr>
           <th>Kategooria</th>
           <th>Toode</th>
-          <th>Eeldatav seis</th>
           <th>Loetud seis</th>
           <th>Kommentaar</th>
         </tr>
@@ -26,7 +25,6 @@
         <tr v-for="product in products" :key="product.id" :class="rowClass(product)">
           <td>{{ product.category_name || '-' }}</td>
           <td>{{ product.name }}</td>
-          <td>{{ product.expected_quantity }}</td>
           <td>
             <input v-model="counted[product.id]" type="number" step="1" />
           </td>

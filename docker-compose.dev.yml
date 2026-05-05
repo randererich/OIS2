@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:16
+    container_name: konvent-pos-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-konvent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-konvent}
+      POSTGRES_DB: ${POSTGRES_DB:-konvent_pos}
+    ports:
+      - "5433:5432"
+    volumes:
+      - konvent_pos_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    image: node:20-alpine
+    container_name: konvent-pos-server
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: ${PORT:-3000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-konvent}:${POSTGRES_PASSWORD:-konvent}@db:5432/${POSTGRES_DB:-konvent_pos}
+      APP_USERNAME: ${APP_USERNAME:-konvent}
+      APP_PASSWORD: ${APP_PASSWORD:-MirtelPohlaTissid}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-MirtelPohlaTissid}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
+      CLIENT_ORIGINS: ${CLIENT_ORIGINS:-http://localhost:5173,http://ois2.tartu.vironia.ee:5173,http://ois2.tartu.vironia.ee,https://ois2.tartu.vironia.ee}
+    volumes:
+      - ./server:/app
+      - server_node_modules:/app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+
+  client:
+    image: node:20-alpine
+    container_name: konvent-pos-client
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE: ${VITE_API_BASE:-/api}
+    volumes:
+      - ./client:/app
+      - client_node_modules:/app/node_modules
+    depends_on:
+      - server
+
+volumes:
+  konvent_pos_data:
+  server_node_modules:
+  client_node_modules:
