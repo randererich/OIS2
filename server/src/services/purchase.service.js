@@ -79,6 +79,21 @@ async function ensureDecimalQuantityColumns(client) {
   ];
 
   for (const [tableName, columnName] of columns) {
+    const existsResult = await client.query(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name = $1
+           AND column_name = $2
+       ) AS exists`,
+      [tableName, columnName]
+    );
+
+    if (!existsResult.rows[0]?.exists) {
+      continue;
+    }
+
     await client.query(
       `ALTER TABLE ${tableName}
        ALTER COLUMN ${columnName} TYPE NUMERIC(10,2)
