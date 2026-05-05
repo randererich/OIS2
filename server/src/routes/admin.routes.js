@@ -10,7 +10,8 @@ import {
   getInventoryCountProducts,
   getInventoryReportById,
   getInventoryReports,
-  postInventoryMovement
+  postInventoryMovement,
+  getCashBalance
 } from "../controllers/inventory.controller.js";
 import {
   createPerson,
@@ -53,6 +54,7 @@ router.get("/purchases", getPurchases);
 router.get("/inventory", getInventory);
 router.post("/inventory/movement", postInventoryMovement);
 router.get("/inventory/count-products", getInventoryCountProducts);
+router.get("/inventory/cash-balance", getCashBalance);
 router.post("/inventory/reports", createInventoryReportController);
 router.get("/inventory/reports", getInventoryReports);
 router.get("/inventory/reports/:id", getInventoryReportById);

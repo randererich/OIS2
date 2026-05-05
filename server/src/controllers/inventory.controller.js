@@ -75,7 +75,7 @@ export async function postInventoryMovement(req, res, next) {
 
 export async function createInventoryReportController(req, res, next) {
   try {
-    const { comment, valvevarv, counts } = req.body;
+    const { comment, valvevarv, counts, cash_counted } = req.body;
     if (!Array.isArray(counts) || counts.length === 0) {
       return res.status(400).json({ error: "counts array is required" });
     }
@@ -84,8 +84,32 @@ export async function createInventoryReportController(req, res, next) {
       return res.status(400).json({ error: "valvevarv is required" });
     }
 
-    const result = await createInventoryReport({ comment, valvevarv, counts });
+    const result = await createInventoryReport({ comment, valvevarv, counts, cash_counted });
     res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getCashBalance(req, res, next) {
+  try {
+    // Get the Sularaha account balance from the people table
+    // Sularaha account typically has a specific id or name
+    // For now, we'll sum up all cash transactions
+    const result = await query(
+      `SELECT 
+         COALESCE(SUM(CASE 
+           WHEN p.id = 1 AND pur.product_id IN (28, 27) 
+           THEN pur.total_price * (CASE WHEN pur.product_id = 28 THEN 1 ELSE -1 END)
+           ELSE 0 
+         END), 0) AS balance
+       FROM purchases pur
+       RIGHT JOIN people p ON p.id = 1
+       WHERE pur.is_cancelled = FALSE`
+    );
+
+    const balance = Number(result.rows[0]?.balance || 0);
+    res.json({ balance: balance.toFixed(2) });
   } catch (error) {
     next(error);
   }

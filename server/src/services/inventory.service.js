@@ -31,26 +31,27 @@ export async function addInventoryMovement({ productId, quantityChange, reason, 
   });
 }
 
-export async function createInventoryReport({ comment, valvevarv, counts }) {
+export async function createInventoryReport({ comment, valvevarv, counts, cash_counted }) {
   return transaction(async (client) => {
     const hasValvevarv = await hasTableColumn("inventory_count_reports", "valvevarv");
+    const hasCashCounted = await hasTableColumn("inventory_count_reports", "cash_counted");
 
     let reportResult;
-    if (hasValvevarv) {
-      reportResult = await client.query(
-        `INSERT INTO inventory_count_reports (valvevarv, comment)
-         VALUES ($1, $2)
-         RETURNING id, created_at, valvevarv`,
-        [String(valvevarv || "").trim() || "Määramata", comment || null]
-      );
-    } else {
-      reportResult = await client.query(
-        `INSERT INTO inventory_count_reports (comment)
-         VALUES ($1)
-         RETURNING id, created_at`,
-        [comment || null]
-      );
+    let reportColumns = ["valvevarv", "comment"];
+    let reportValues = [String(valvevarv || "").trim() || "Määramata", comment || null];
+    let reportParams = ["$1", "$2"];
+
+    if (hasCashCounted) {
+      reportColumns.push("cash_counted");
+      reportValues.push(Number(cash_counted || 0));
+      reportParams.push("$3");
     }
+
+    const insertSql = `INSERT INTO inventory_count_reports (${reportColumns.join(", ")})
+         VALUES (${reportParams.join(", ")})
+         RETURNING id, created_at${hasValvevarv ? ", valvevarv" : ""}${hasCashCounted ? ", cash_counted" : ""}`;
+
+    reportResult = await client.query(insertSql, reportValues);
 
     const report = reportResult.rows[0];
 
@@ -97,7 +98,11 @@ export async function createInventoryReport({ comment, valvevarv, counts }) {
     return {
       report_id: report.id,
       created_at: report.created_at,
-      counts_saved: counts.length
+      counts_saved: counts.length,
+      cash_counted: Number(cash_counted || 0)
+    };
+  });
+}
     };
   });
 }

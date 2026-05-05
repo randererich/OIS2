@@ -54,6 +54,21 @@
       </tbody>
     </table>
 
+    <section class="panel" style="margin-top: 2rem;">
+      <h3>💶 Sularaha inventuur</h3>
+      <div class="form-grid">
+        <label>
+          Loetud sularaha (€)
+          <input v-model.number="cashCounted" type="number" step="0.01" placeholder="0.00" />
+        </label>
+      </div>
+      <p>
+        Arvete järgi: <strong>{{ cashBalance }}</strong> €
+        | Loetud: <strong>{{ cashCounted }}</strong> €
+        | Erinevus: <strong :class="cashDifference >= 0 ? 'cash-ok' : 'cash-low'">{{ cashDifference }}</strong> €
+      </p>
+    </section>
+
     <div class="actions" style="justify-content: center;">
       <button type="button" @click="saveReport">Salvesta inventuur</button>
     </div>
@@ -74,6 +89,8 @@ const valvevarv = ref("");
 const reportComment = ref("");
 const counted = reactive({});
 const comments = reactive({});
+const cashCounted = ref(0);
+const cashBalance = ref(0);
 
 function statusInfo(totalExpected, totalCounted) {
   const expected = Number(totalExpected || 0);
@@ -119,6 +136,10 @@ const summary = computed(() => {
 
 const summaryClass = computed(() => summary.value.className);
 
+const cashDifference = computed(() => {
+  return (Number(cashCounted.value || 0) - Number(cashBalance.value || 0)).toFixed(2);
+});
+
 async function loadCountProducts() {
   loadingProducts.value = true;
   error.value = "";
@@ -126,9 +147,14 @@ async function loadCountProducts() {
   try {
     products.value = await apiFetch("/inventory/count-products");
     for (const product of products.value) {
-      counted[product.id] = String(product.expected_quantity);
+      counted[product.id] = "0";
       comments[product.id] = "";
     }
+    
+    // Load cash balance from the system
+    const cashData = await apiFetch("/inventory/cash-balance");
+    cashBalance.value = Number(cashData.balance || 0);
+    cashCounted.value = 0;
   } catch (err) {
     error.value = err.message;
   } finally {
@@ -176,7 +202,8 @@ async function saveReport() {
       body: JSON.stringify({
         valvevarv: valvevarv.value.trim(),
         comment: reportComment.value || null,
-        counts
+        counts,
+        cash_counted: Number(cashCounted.value || 0)
       })
     });
 
@@ -214,6 +241,16 @@ onMounted(async () => {
 
 .inventory-row-low {
   background: #fde8e8;
+}
+
+.cash-ok {
+  color: var(--ok);
+  font-weight: 600;
+}
+
+.cash-low {
+  color: #d32f2f;
+  font-weight: 600;
 }
 
 [data-theme="dark"] .inventory-row-ok {
