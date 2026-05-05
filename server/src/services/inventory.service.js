@@ -103,6 +103,3 @@ export async function createInventoryReport({ comment, valvevarv, counts, cash_c
     };
   });
 }
-    };
-  });
-}
