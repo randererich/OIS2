@@ -1,10 +1,9 @@
 <template>
   <section class="page pos-quantity-page">
-    <h2 class="pos-quantity-title">Sisesta {{ isCashOperation ? 'summa' : 'kogus' }}</h2>
+    <h2 class="pos-quantity-title">{{ isCashOperation ? 'Summa' : 'Kogus' }}</h2>
 
     <p class="inline-summary pos-quantity-summary">
-      {{ posStore.product?.name }}<template v-if="!isCashOperation"> - {{ money(posStore.product?.price) }}</template>.
-      Sisesta {{ isCashOperation ? 'summa' : 'kogus' }}.
+      {{ posStore.product?.name }}<template v-if="!isCashOperation"> - {{ money(posStore.product?.price) }}</template>
     </p>
 
     <div class="actions pos-quantity-actions-top">
@@ -261,15 +260,18 @@ watch(inputValue, () => {
 <style scoped>
 .pos-quantity-page {
   align-items: center;
-  gap: 1.2rem;
+  gap: 1rem;
 }
 
 .pos-quantity-title {
-  font-size: 2.35rem;
+  font-size: 2.2rem;
+  margin-bottom: 6px;
 }
 
 .pos-quantity-summary {
-  font-size: 1.55rem;
+  font-size: 1.35rem;
+  margin-top: 0;
+  margin-bottom: 0.35rem;
 }
 
 .pos-quantity-actions-top,
@@ -283,19 +285,17 @@ watch(inputValue, () => {
   flex-direction: column;
   width: 100%;
   max-width: 440px;
-  font-size: 1.45rem;
-  gap: 0.6rem;
+  font-size: 1.25rem;
+  gap: 0.45rem;
 }
 
 .pos-quantity-input {
   text-align: center;
-  font-size: 2.7rem;
-  padding: 16px;
-  letter-spacing: 0.04em;
+  font-size: 2.45rem;
+  padding: 14px 16px;
+  letter-spacing: 0.02em;
   font-variant-numeric: tabular-nums;
-  border-radius: 20px;
-  border: 1px solid rgba(13, 31, 48, 0.16);
-  box-shadow: 0 10px 24px rgba(13, 31, 48, 0.08);
+  border-radius: 14px;
 }
 
 .pos-quantity-pad {
@@ -308,9 +308,13 @@ watch(inputValue, () => {
   margin: 0 auto;
 }
 
+.pos-quantity-pad :deep(.number-pad button) {
+  font-size: 1.5rem;
+}
+
 .pos-quantity-big-button {
-  font-size: 1.75rem;
-  padding: 16px 30px;
+  font-size: 1.55rem;
+  padding: 14px 26px;
   min-width: 280px;
 }
 </style>
