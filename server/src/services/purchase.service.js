@@ -157,8 +157,8 @@ export async function createPurchase({ personId, productId, quantity, maxPurchas
     const unitPrice = Number(product.price);
     const cashOperation = cashOperationFor(product);
 
-    if (!cashOperation && (!Number.isInteger(Number(quantity)) || Math.abs(Number(quantity)) > maxPurchaseQuantity)) {
-      const err = new Error(`quantity must be an integer between -${maxPurchaseQuantity} and ${maxPurchaseQuantity}`);
+    if (!cashOperation && (!Number.isFinite(Number(quantity)) || Math.abs(Number(quantity)) > maxPurchaseQuantity)) {
+      const err = new Error(`quantity must be between -${maxPurchaseQuantity} and ${maxPurchaseQuantity}`);
       err.status = 400;
       throw err;
     }
