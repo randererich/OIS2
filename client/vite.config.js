@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: process.env.API_TARGET || "http://server:3000",
+        target: "http://server:3000",
         changeOrigin: true
       }
     },
