@@ -5,6 +5,8 @@ const CASH_ACCOUNT_LAST_NAME = "Raha";
 
 export async function ensureCashSetup() {
   await transaction(async (client) => {
+    await ensureDecimalQuantityColumns(client);
+
     await client.query(
       "ALTER TABLE products ADD COLUMN IF NOT EXISTS unit TEXT NOT NULL DEFAULT 'tk'"
     );
@@ -64,6 +66,25 @@ export async function ensureCashSetup() {
 
     await ensureCashAccount(client);
   });
+}
+
+async function ensureDecimalQuantityColumns(client) {
+  const columns = [
+    ["products", "stock_quantity"],
+    ["purchases", "quantity"],
+    ["inventory_movements", "quantity_change"],
+    ["inventory_counts", "expected_quantity"],
+    ["inventory_counts", "counted_quantity"],
+    ["inventory_counts", "difference"]
+  ];
+
+  for (const [tableName, columnName] of columns) {
+    await client.query(
+      `ALTER TABLE ${tableName}
+       ALTER COLUMN ${columnName} TYPE NUMERIC(10,2)
+       USING ${columnName}::NUMERIC(10,2)`
+    );
+  }
 }
 
 function cashOperationFor(product) {
