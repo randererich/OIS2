@@ -71,7 +71,7 @@
           <td>{{ product.name }}</td>
           <td>{{ product.category_name || '-' }}</td>
           <td>{{ money(product.price) }}</td>
-          <td>{{ product.stock_quantity }}</td>
+          <td>{{ quantity(product.stock_quantity) }}</td>
           <td>{{ product.unit || 'tk' }}</td>
           <td>{{ product.is_visible ? 'Jah' : 'Ei' }}</td>
           <td>{{ product.is_inventory_tracked ? 'Jah' : 'Ei' }}</td>
@@ -91,6 +91,7 @@
 <script setup>
 import { onMounted, reactive, ref } from "vue";
 import { apiFetchAdmin } from "../api/client";
+import { quantity } from "../utils/format";
 
 const products = ref([]);
 const categories = ref([]);
@@ -136,7 +137,7 @@ function editProduct(product) {
   form.category_id = product.category_id ? String(product.category_id) : "";
   form.name = product.name;
   form.price = String(product.price);
-  form.stock_quantity = String(product.stock_quantity);
+  form.stock_quantity = quantity(product.stock_quantity);
   form.unit = product.unit || "tk";
   form.is_visible = product.is_visible;
   form.is_inventory_tracked = product.is_inventory_tracked;

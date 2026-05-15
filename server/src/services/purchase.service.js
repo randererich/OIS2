@@ -80,7 +80,39 @@ export async function ensureCashSetup() {
     );
 
     await ensureCashAccount(client);
+    await ensurePersonDebtsView(client);
   });
+}
+
+async function ensurePersonDebtsView(client) {
+  await client.query(
+    `CREATE OR REPLACE VIEW person_debts AS
+     SELECT
+       p.id,
+       p.first_name,
+       p.last_name,
+       p.coetus,
+       p.konvent,
+       COALESCE(purchases.total, 0) +
+         CASE
+           WHEN lower(p.first_name) = lower('Sula')
+            AND lower(p.last_name) = lower('Raha')
+           THEN COALESCE(payments.total, 0)
+           ELSE -COALESCE(payments.total, 0)
+         END AS debt
+     FROM people p
+     LEFT JOIN (
+       SELECT person_id, SUM(total_price) AS total
+       FROM purchases
+       WHERE is_cancelled = FALSE
+       GROUP BY person_id
+     ) purchases ON purchases.person_id = p.id
+     LEFT JOIN (
+       SELECT person_id, SUM(amount) AS total
+       FROM payments
+       GROUP BY person_id
+     ) payments ON payments.person_id = p.id`
+  );
 }
 
 async function ensureDecimalQuantityColumns(client) {

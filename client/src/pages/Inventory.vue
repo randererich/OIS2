@@ -17,9 +17,9 @@
     <section class="panel" :class="summaryClass">
       <h3>Inventuuri kokkuvõte</h3>
       <p>
-        Eeldatav kokku: <strong>{{ summary.totalExpected }}</strong>
-        | Loetud kokku: <strong>{{ summary.totalCounted }}</strong>
-        | Erinevus: <strong>{{ summary.difference }}</strong>
+        Eeldatav kokku: <strong>{{ quantity(summary.totalExpected) }}</strong>
+        | Loetud kokku: <strong>{{ quantity(summary.totalCounted) }}</strong>
+        | Erinevus: <strong>{{ signedQuantity(summary.difference) }}</strong>
       </p>
       <p><strong>{{ summary.status }}</strong></p>
     </section>
@@ -78,6 +78,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { apiFetch } from "../api/client";
+import { quantity, signedQuantity } from "../utils/format";
 
 const products = ref([]);
 const loadingProducts = ref(false);

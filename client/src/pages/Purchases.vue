@@ -48,7 +48,7 @@
           <td>{{ formatDate(purchase.created_at) }}</td>
           <td>{{ purchase.first_name }} {{ purchase.last_name }}</td>
           <td>{{ purchase.product_name }}</td>
-          <td>{{ purchase.quantity }} {{ purchase.product_unit || 'tk' }}</td>
+          <td>{{ quantity(purchase.quantity) }} {{ purchase.product_unit || 'tk' }}</td>
           <td :class="purchase.total_price < 0 ? 'balance-credit' : ''">{{ money(purchase.total_price) }}</td>
           <td>{{ purchase.comment || '-' }}</td>
           <td>{{ statusLabel(purchase) }}</td>
@@ -65,6 +65,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { apiFetch } from "../api/client";
+import { quantity } from "../utils/format";
 
 const purchases = ref([]);
 const loading = ref(false);

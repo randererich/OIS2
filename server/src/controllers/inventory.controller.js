@@ -93,19 +93,13 @@ export async function createInventoryReportController(req, res, next) {
 
 export async function getCashBalance(req, res, next) {
   try {
-    // Get the Sularaha account balance from the people table
-    // Sularaha account typically has a specific id or name
-    // For now, we'll sum up all cash transactions
     const result = await query(
-      `SELECT 
-         COALESCE(SUM(CASE 
-           WHEN p.id = 1 AND pur.product_id IN (28, 27) 
-           THEN pur.total_price * (CASE WHEN pur.product_id = 28 THEN 1 ELSE -1 END)
-           ELSE 0 
-         END), 0) AS balance
-       FROM purchases pur
-       RIGHT JOIN people p ON p.id = 1
-       WHERE pur.is_cancelled = FALSE`
+      `SELECT debt AS balance
+       FROM person_debts
+       WHERE lower(first_name) = lower('Sula')
+         AND lower(last_name) = lower('Raha')
+       ORDER BY id ASC
+       LIMIT 1`
     );
 
     const balance = Number(result.rows[0]?.balance || 0);
@@ -133,6 +127,156 @@ function reportStatus(totalExpected, totalCounted) {
   }
 
   return { status: "Suur puudujääk", status_color: "red", loss_percent: Number(lossPercent.toFixed(2)) };
+}
+
+function isValidDateString(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
+
+function resolveOverviewRange(query) {
+  const requestedDateFrom = String(query.date_from || "").trim();
+  const requestedDateTo = String(query.date_to || "").trim();
+
+  if (isValidDateString(requestedDateFrom) && isValidDateString(requestedDateTo)) {
+    return requestedDateFrom <= requestedDateTo
+      ? { dateFrom: requestedDateFrom, dateTo: requestedDateTo }
+      : { dateFrom: requestedDateTo, dateTo: requestedDateFrom };
+  }
+
+  const requestedMonth = String(query.month || "").trim();
+  const match = requestedMonth.match(/^(\d{4})-(\d{2})$/);
+  const parsedMonth = match ? Number(match[2]) : 0;
+  const normalizedMonth = match && parsedMonth >= 1 && parsedMonth <= 12
+    ? requestedMonth
+    : new Date().toISOString().slice(0, 7);
+
+  const monthStart = `${normalizedMonth}-01`;
+  const monthEnd = new Date(`${monthStart}T00:00:00.000Z`);
+  monthEnd.setUTCMonth(monthEnd.getUTCMonth() + 1);
+  monthEnd.setUTCDate(monthEnd.getUTCDate() - 1);
+
+  return { dateFrom: monthStart, dateTo: monthEnd.toISOString().slice(0, 10) };
+}
+
+export async function getInventoryMonthlyOverview(req, res, next) {
+  try {
+    const { dateFrom, dateTo } = resolveOverviewRange(req.query);
+    const hasValvevarv = await hasTableColumn("inventory_count_reports", "valvevarv");
+    const hasCashCounted = await hasTableColumn("inventory_count_reports", "cash_counted");
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const valvevarvSql = hasValvevarv ? "r.valvevarv" : "'Määramata'::TEXT AS valvevarv";
+    const valvevarvGroupBy = hasValvevarv ? ", r.valvevarv" : "";
+    const cashCountedSql = hasCashCounted ? "r.cash_counted" : "0::NUMERIC(10,2) AS cash_counted";
+    const cashCountedGroupBy = hasCashCounted ? ", r.cash_counted" : "";
+    const unitSql = hasProductUnit ? "p.unit" : "'tk'::TEXT AS unit";
+    const unitGroupBy = hasProductUnit ? ", p.unit" : "";
+    const params = [dateFrom, dateTo];
+    const rangeWhere = "r.created_at >= $1::date AND r.created_at < ($2::date + INTERVAL '1 day')";
+
+    const summaryResult = await query(
+      `SELECT
+         COUNT(DISTINCT r.id)::INT AS reports_count,
+         COUNT(DISTINCT DATE(r.created_at))::INT AS counted_days,
+         COALESCE(SUM(CASE WHEN c.difference < 0 THEN ABS(c.difference) ELSE 0 END), 0)::NUMERIC(10,2) AS lost_quantity,
+         COALESCE(SUM(CASE WHEN c.difference > 0 THEN c.difference ELSE 0 END), 0)::NUMERIC(10,2) AS overage_quantity,
+         COALESCE(SUM(c.difference), 0)::NUMERIC(10,2) AS net_difference,
+         COALESCE(SUM(CASE WHEN c.difference < 0 THEN ABS(c.difference) * p.price ELSE 0 END), 0)::NUMERIC(10,2) AS lost_value
+       FROM inventory_count_reports r
+       LEFT JOIN inventory_counts c ON c.report_id = r.id
+       LEFT JOIN products p ON p.id = c.product_id
+       WHERE ${rangeWhere}`,
+      params
+    );
+
+    const valueResult = await query(
+      `SELECT
+         COALESCE(SUM(p.stock_quantity * p.price), 0)::NUMERIC(10,2) AS total_stock_value
+       FROM products p
+       WHERE p.is_visible = TRUE
+         AND p.is_inventory_tracked = TRUE`
+    );
+
+    const reportsResult = await query(
+      `SELECT
+         r.id,
+         r.created_at,
+         ${valvevarvSql},
+         ${cashCountedSql},
+         r.comment,
+         COUNT(c.id)::INT AS counted_products,
+         COALESCE(SUM(CASE WHEN c.difference < 0 THEN ABS(c.difference) ELSE 0 END), 0)::NUMERIC(10,2) AS lost_quantity,
+         COALESCE(SUM(CASE WHEN c.difference > 0 THEN c.difference ELSE 0 END), 0)::NUMERIC(10,2) AS overage_quantity,
+         COALESCE(SUM(c.difference), 0)::NUMERIC(10,2) AS net_difference
+       FROM inventory_count_reports r
+       LEFT JOIN inventory_counts c ON c.report_id = r.id
+       WHERE ${rangeWhere}
+       GROUP BY r.id, r.created_at${valvevarvGroupBy}${cashCountedGroupBy}, r.comment
+       ORDER BY r.created_at ASC, r.id ASC`,
+      params
+    );
+
+    const productsResult = await query(
+      `SELECT
+         p.id AS product_id,
+         p.name AS product_name,
+         cat.name AS category_name,
+         ${unitSql},
+         p.stock_quantity,
+         COUNT(*) FILTER (WHERE c.difference < 0)::INT AS shortage_count,
+         COALESCE(SUM(CASE WHEN c.difference < 0 THEN ABS(c.difference) ELSE 0 END), 0)::NUMERIC(10,2) AS lost_quantity,
+         COALESCE(SUM(CASE WHEN c.difference > 0 THEN c.difference ELSE 0 END), 0)::NUMERIC(10,2) AS overage_quantity,
+         COALESCE(SUM(c.difference), 0)::NUMERIC(10,2) AS net_difference,
+         COALESCE(SUM(CASE WHEN c.difference < 0 THEN ABS(c.difference) * p.price ELSE 0 END), 0)::NUMERIC(10,2) AS lost_value
+       FROM inventory_count_reports r
+       JOIN inventory_counts c ON c.report_id = r.id
+       JOIN products p ON p.id = c.product_id
+       LEFT JOIN categories cat ON cat.id = p.category_id
+       WHERE ${rangeWhere}
+       GROUP BY p.id, p.name, p.stock_quantity, cat.name${unitGroupBy}
+       ORDER BY lost_quantity DESC, lost_value DESC, shortage_count DESC, p.name ASC`,
+      params
+    );
+
+    const cashReports = reportsResult.rows.map((row) => ({
+        id: row.id,
+        created_at: row.created_at,
+        valvevarv: row.valvevarv,
+        comment: row.comment,
+        cash_counted: row.cash_counted
+      }));
+
+    const summary = summaryResult.rows[0] || {
+      reports_count: 0,
+      counted_days: 0,
+      lost_quantity: "0.00",
+      overage_quantity: "0.00",
+      net_difference: "0.00",
+      lost_value: "0.00"
+    };
+    const totalStockValue = Number(valueResult.rows[0]?.total_stock_value || 0);
+    const lostValue = Number(summary.lost_value || 0);
+
+    res.json({
+      date_from: dateFrom,
+      date_to: dateTo,
+      summary,
+      value_summary: {
+        total_stock_value: totalStockValue.toFixed(2),
+        lost_value: lostValue.toFixed(2),
+        loss_percent: totalStockValue > 0 ? ((lostValue / totalStockValue) * 100).toFixed(2) : "0.00"
+      },
+      reports: reportsResult.rows,
+      products: productsResult.rows,
+      cash_reports: cashReports
+    });
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function getInventoryReports(req, res, next) {

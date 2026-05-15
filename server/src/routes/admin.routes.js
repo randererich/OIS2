@@ -8,6 +8,7 @@ import {
   createInventoryReportController,
   getInventory,
   getInventoryCountProducts,
+  getInventoryMonthlyOverview,
   getInventoryReportById,
   getInventoryReports,
   postInventoryMovement,
@@ -55,6 +56,7 @@ router.get("/inventory", getInventory);
 router.post("/inventory/movement", postInventoryMovement);
 router.get("/inventory/count-products", getInventoryCountProducts);
 router.get("/inventory/cash-balance", getCashBalance);
+router.get("/inventory/monthly-overview", getInventoryMonthlyOverview);
 router.post("/inventory/reports", createInventoryReportController);
 router.get("/inventory/reports", getInventoryReports);
 router.get("/inventory/reports/:id", getInventoryReportById);

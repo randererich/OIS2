@@ -18,7 +18,8 @@
         <RouterLink to="/admin/products">Tooted</RouterLink>
         <RouterLink to="/admin/categories">Kategooriad</RouterLink>
         <RouterLink to="/admin/people">Inimesed</RouterLink>
-        <RouterLink to="/admin/inventory">Varud / Inventuur</RouterLink>
+        <RouterLink to="/admin/stock-overview">Varud</RouterLink>
+        <RouterLink to="/admin/inventory">Inventuur</RouterLink>
         <RouterLink to="/admin/purchases">Kirjed (admin)</RouterLink>
         <RouterLink to="/admin/password">Vaheta parooli</RouterLink>
         <button class="dark-toggle" type="button" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'" @click="toggleDark">

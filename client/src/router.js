@@ -11,8 +11,10 @@ import Products from "./pages/Products.vue";
 import Purchases from "./pages/Purchases.vue";
 import Stats from "./pages/Stats.vue";
 import AdminPassword from "./pages/admin/AdminHome.vue";
+import AdminInventoryCount from "./pages/admin/AdminInventoryCount.vue";
 import AdminInventoryReports from "./pages/admin/AdminInventoryReports.vue";
 import AdminPurchases from "./pages/admin/AdminPurchases.vue";
+import AdminStockOverview from "./pages/admin/AdminStockOverview.vue";
 import Inventory from "./pages/Inventory.vue";
 
 const routes = [
@@ -29,9 +31,9 @@ const routes = [
   { path: "/admin/categories", component: AdminCategories, meta: { requiresAdmin: true } },
   { path: "/admin/people", component: People, meta: { requiresAdmin: true } },
   { path: "/admin/inventory", component: AdminInventoryReports, meta: { requiresAdmin: true } },
-  { path: "/admin/stock-overview", redirect: "/admin/inventory", meta: { requiresAdmin: true } },
-  { path: "/admin/stock-add", redirect: "/admin/inventory", meta: { requiresAdmin: true } },
-  { path: "/admin/inventory-count", redirect: "/admin/inventory", meta: { requiresAdmin: true } },
+  { path: "/admin/stock-overview", component: AdminStockOverview, meta: { requiresAdmin: true } },
+  { path: "/admin/stock-add", redirect: "/admin/stock-overview", meta: { requiresAdmin: true } },
+  { path: "/admin/inventory-count", component: AdminInventoryCount, meta: { requiresAdmin: true } },
   { path: "/admin/inventory-reports", redirect: "/admin/inventory", meta: { requiresAdmin: true } },
   { path: "/admin/purchases", component: AdminPurchases, meta: { requiresAdmin: true } },
   { path: "/admin/password", component: AdminPassword, meta: { requiresAdmin: true } }

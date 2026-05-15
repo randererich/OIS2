@@ -22,7 +22,7 @@ function parseMonth(monthInput) {
   return { start, end };
 }
 
-function buildDateFilter(req, startIndex = 1) {
+function buildDateFilter(req, startIndex = 1, tableAlias = "pu") {
   const params = [];
   const clauses = [];
   const dateFrom = (req.query.date_from || "").trim();
@@ -30,18 +30,80 @@ function buildDateFilter(req, startIndex = 1) {
 
   if (dateFrom) {
     params.push(dateFrom);
-    clauses.push(`pu.created_at >= $${startIndex + params.length - 1}::timestamptz`);
+    clauses.push(`${tableAlias}.created_at >= $${startIndex + params.length - 1}::timestamptz`);
   }
 
   if (dateTo) {
     params.push(dateTo);
-    clauses.push(`pu.created_at < ($${startIndex + params.length - 1}::date + INTERVAL '1 day')`);
+    clauses.push(`${tableAlias}.created_at < ($${startIndex + params.length - 1}::date + INTERVAL '1 day')`);
   }
 
   return {
     params,
     sql: clauses.length ? ` AND ${clauses.join(" AND ")}` : ""
   };
+}
+
+export async function getCategoryTotals(req, res, next) {
+  try {
+    const limit = getLimit(req.query.limit);
+    const dateFilter = buildDateFilter(req, 1);
+    const params = [...dateFilter.params, limit];
+
+    const result = await query(
+      `SELECT
+         c.id AS category_id,
+         COALESCE(c.name, 'Määramata') AS category,
+         CASE
+           WHEN COUNT(DISTINCT pr.unit) = 1 THEN MIN(pr.unit)
+           ELSE NULL
+         END AS unit,
+         COUNT(pu.id)::INT AS purchase_count,
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_quantity,
+         COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_revenue
+       FROM purchases pu
+       JOIN products pr ON pr.id = pu.product_id
+       LEFT JOIN categories c ON c.id = pr.category_id
+       WHERE pu.is_cancelled = FALSE
+         ${dateFilter.sql}
+       GROUP BY c.id, c.name
+       ORDER BY total_revenue DESC, total_quantity DESC, category ASC
+       LIMIT $${params.length}`,
+      params
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getTugevaimCoetus(req, res, next) {
+  try {
+    const limit = getLimit(req.query.limit);
+    const dateFilter = buildDateFilter(req, 1);
+    const params = [...dateFilter.params, limit];
+
+    const result = await query(
+      `SELECT
+         COALESCE(NULLIF(TRIM(pe.coetus), ''), 'Määramata') AS coetus,
+         COUNT(pu.id)::INT AS purchase_count,
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_quantity,
+         COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_spent
+       FROM purchases pu
+       JOIN people pe ON pe.id = pu.person_id
+       WHERE pu.is_cancelled = FALSE
+         ${dateFilter.sql}
+       GROUP BY COALESCE(NULLIF(TRIM(pe.coetus), ''), 'Määramata')
+       ORDER BY total_spent DESC, total_quantity DESC, coetus ASC
+       LIMIT $${params.length}`,
+      params
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function getTopSpenders(req, res, next) {

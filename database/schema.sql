@@ -203,7 +203,13 @@ SELECT
   p.last_name,
   p.coetus,
   p.konvent,
-  COALESCE(purchases.total, 0) - COALESCE(payments.total, 0) AS debt
+  COALESCE(purchases.total, 0) +
+    CASE
+      WHEN lower(p.first_name) = lower('Sula')
+       AND lower(p.last_name) = lower('Raha')
+      THEN COALESCE(payments.total, 0)
+      ELSE -COALESCE(payments.total, 0)
+    END AS debt
 FROM people p
 LEFT JOIN (
   SELECT person_id, SUM(total_price) AS total

@@ -71,7 +71,7 @@
           <tbody>
             <tr v-for="item in monthlySummary" :key="item.product_id">
               <td>{{ item.product_name }}</td>
-              <td>{{ item.total_quantity }}</td>
+              <td>{{ quantity(item.total_quantity) }}</td>
               <td>{{ money(item.total_sum) }}</td>
             </tr>
           </tbody>
@@ -93,7 +93,7 @@
             <tr v-for="purchase in monthlyPurchases" :key="purchase.id" :class="{ cancelled: purchase.is_cancelled }">
               <td>{{ formatDate(purchase.created_at) }}</td>
               <td>{{ purchase.product_name }}</td>
-              <td>{{ purchase.quantity }} {{ purchase.unit || 'tk' }}</td>
+              <td>{{ quantity(purchase.quantity) }} {{ purchase.unit || 'tk' }}</td>
               <td>{{ money(purchase.total_price) }}</td>
               <td>{{ purchase.comment || '-' }}</td>
               <td>{{ purchaseStatus(purchase) }}</td>
@@ -108,6 +108,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { apiFetch } from "../api/client";
+import { quantity } from "../utils/format";
 
 const debts = ref([]);
 const error = ref("");

@@ -1,4 +1,4 @@
-<template>
+s<template>
   <table>
     <thead>
       <tr>
