@@ -10,6 +10,7 @@ const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
 const replace = args.has("--replace");
 const append = args.has("--append");
+const affectsDebt = args.has("--affects-debt");
 const entriesPathArg = process.argv.find((arg) => arg.startsWith("--entries="))?.split("=")[1];
 const productsPathArg = process.argv.find((arg) => arg.startsWith("--products="))?.split("=")[1];
 const ENTRIES_CSV_PATH = path.resolve(
@@ -372,6 +373,9 @@ async function ensurePurchaseSchemaCompatibility() {
   await query(
     "ALTER TABLE purchases ALTER COLUMN quantity TYPE NUMERIC(10,2) USING quantity::numeric"
   );
+  await query(
+    "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS affects_debt BOOLEAN NOT NULL DEFAULT TRUE"
+  );
 }
 
 function roundMoney(value) {
@@ -477,6 +481,7 @@ function mapEntries({ productIds, legacyProductMap, peopleIds }) {
       comment,
       createdAt,
       false,
+      affectsDebt,
     ]);
 
     const productStats = perProduct.get(productConfig.name) || {
@@ -514,6 +519,7 @@ function printSummary({ matchedLegacyProducts, mapped }) {
 
   console.log("");
   console.log("Stats-only Kirjed mapping:");
+  console.log(`- Imported rows affect debts: ${affectsDebt ? "yes" : "no"}`);
   console.log(`- Rows parsed: ${mapped.stats.parsed}`);
   console.log(`- Purchases to import: ${mapped.stats.importedPurchases}`);
   console.log(`- Skipped non-whitelisted product rows: ${mapped.stats.skippedNotWhitelisted}`);
@@ -587,6 +593,7 @@ async function importEntries() {
         "comment",
         "created_at",
         "is_cancelled",
+        "affects_debt",
       ],
       mapped.purchases
     );

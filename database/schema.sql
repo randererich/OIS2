@@ -42,9 +42,13 @@ CREATE TABLE IF NOT EXISTS purchases (
   comment TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   is_cancelled BOOLEAN NOT NULL DEFAULT FALSE,
+  affects_debt BOOLEAN NOT NULL DEFAULT TRUE,
   cancelled_at TIMESTAMPTZ,
   cancellation_reason TEXT
 );
+
+ALTER TABLE purchases
+ADD COLUMN IF NOT EXISTS affects_debt BOOLEAN NOT NULL DEFAULT TRUE;
 
 CREATE TABLE IF NOT EXISTS payments (
   id SERIAL PRIMARY KEY,
@@ -215,6 +219,7 @@ LEFT JOIN (
   SELECT person_id, SUM(total_price) AS total
   FROM purchases
   WHERE is_cancelled = FALSE
+    AND affects_debt = TRUE
   GROUP BY person_id
 ) purchases ON purchases.person_id = p.id
 LEFT JOIN (

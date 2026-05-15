@@ -6,6 +6,9 @@ const CASH_ACCOUNT_LAST_NAME = "Raha";
 export async function ensureCashSetup() {
   await transaction(async (client) => {
     await ensureDecimalQuantityColumns(client);
+    await client.query(
+      "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS affects_debt BOOLEAN NOT NULL DEFAULT TRUE"
+    );
 
     await client.query(
       "ALTER TABLE products ADD COLUMN IF NOT EXISTS unit TEXT NOT NULL DEFAULT 'tk'"
@@ -105,6 +108,7 @@ async function ensurePersonDebtsView(client) {
        SELECT person_id, SUM(total_price) AS total
        FROM purchases
        WHERE is_cancelled = FALSE
+         AND affects_debt = TRUE
        GROUP BY person_id
      ) purchases ON purchases.person_id = p.id
      LEFT JOIN (

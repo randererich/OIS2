@@ -3,7 +3,7 @@
     <h2 class="pos-quantity-title">{{ isCashOperation ? 'Summa' : 'Kogus' }}</h2>
 
     <p class="inline-summary pos-quantity-summary">
-      {{ posStore.product?.name }}<template v-if="!isCashOperation"> - {{ money(posStore.product?.price) }}</template>
+      {{ productName }}<template v-if="!isCashOperation"> - {{ money(posStore.product?.price) }}</template>
     </p>
 
     <div class="actions pos-quantity-actions-top">
@@ -44,6 +44,12 @@ const isDefaultEntry = ref(true);
 const error = ref("");
 const MAX_PURCHASE_QUANTITY = 100;
 const isCashOperation = computed(() => Boolean(posStore.product?.cash_operation));
+const productName = computed(() => {
+  if (posStore.product?.unit === "cl" && !posStore.product?.cash_operation) {
+    return `${posStore.product.name} (1 cl)`;
+  }
+  return posStore.product?.name || "";
+});
 
 function sanitizeRawInput(raw) {
   const trimmed = String(raw || "").trim();
@@ -82,9 +88,38 @@ function money(value) {
   return `${Number(value || 0).toFixed(2)} €`;
 }
 
+function replaceSelectedInput(char) {
+  const input = quantityInput.value;
+  if (!input || document.activeElement !== input || input.selectionStart === input.selectionEnd) {
+    return false;
+  }
+
+  const start = input.selectionStart || 0;
+  const end = input.selectionEnd || 0;
+  const before = inputValue.value.slice(0, start);
+  const after = inputValue.value.slice(end);
+  if (char === "." && `${before}${after}`.includes(".")) {
+    return true;
+  }
+
+  inputValue.value = sanitizeRawInput(`${before}${char}${after}`);
+  isDefaultEntry.value = false;
+
+  nextTick(() => {
+    const cursor = start + char.length;
+    input.setSelectionRange(cursor, cursor);
+  });
+
+  return true;
+}
+
 function append(char) {
   // Allow digits and decimal point
   if (!/^[\d.]$/.test(char)) {
+    return;
+  }
+
+  if (replaceSelectedInput(char)) {
     return;
   }
 

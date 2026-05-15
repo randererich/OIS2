@@ -3,7 +3,7 @@
     <h2>Vali inimene</h2>
 
     <p class="inline-summary">
-      {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ posStore.product?.name }} = {{ money(posStore.total) }}.
+      {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ productName }} = {{ money(posStore.total) }}.
     </p>
 
     <div class="actions">
@@ -86,6 +86,12 @@ const people = ref([]);
 const recentBuyers = ref([]);
 const loading = ref(false);
 const error = ref("");
+const productName = computed(() => {
+  if (posStore.product?.unit === "cl" && !posStore.product?.cash_operation) {
+    return `${posStore.product.name} (1 cl)`;
+  }
+  return posStore.product?.name || "";
+});
 
 function money(value) {
   return `${Number(value || 0).toFixed(2)} €`;

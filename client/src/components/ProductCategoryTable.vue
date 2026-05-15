@@ -1,4 +1,4 @@
-s<template>
+<template>
   <table>
     <thead>
       <tr>
@@ -16,7 +16,7 @@ s<template>
         class="clickable"
         @click="$emit('select', product)"
       >
-        <td :colspan="product.cash_operation ? 2 : 1">{{ product.name }}</td>
+        <td :colspan="product.cash_operation ? 2 : 1">{{ productName(product) }}</td>
         <td v-if="!product.cash_operation">{{ money(product.price) }}</td>
       </tr>
     </tbody>
@@ -41,6 +41,13 @@ const isCashCategory = computed(() =>
 
 function money(value) {
   return `${Number(value).toFixed(2)} €`;
+}
+
+function productName(product) {
+  if (product.unit === "cl" && !product.cash_operation) {
+    return `${product.name} (1 cl)`;
+  }
+  return product.name;
 }
 </script>
 

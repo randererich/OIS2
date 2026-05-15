@@ -2,36 +2,9 @@
   <section class="page">
     <h2>Inimesed (Admin)</h2>
 
-    <form class="form-grid" @submit.prevent="savePerson">
-      <label>
-        Eesnimi
-        <input v-model="form.first_name" required />
-      </label>
-
-      <label>
-        Perenimi
-        <input v-model="form.last_name" required />
-      </label>
-
-      <label>
-        Coetus
-        <input v-model="form.coetus" />
-      </label>
-
-      <label>
-        Konvent
-        <input v-model="form.konvent" />
-      </label>
-
-      <label>
-        <input v-model="form.is_visible" type="checkbox" /> Nahtav
-      </label>
-
-      <div class="actions" style="align-items: end">
-        <button type="submit">Salvesta</button>
-        <button type="button" @click="resetForm">Puhasta</button>
-      </div>
-    </form>
+    <div class="actions">
+      <button type="button" @click="openCreatePerson">Lisa inimene</button>
+    </div>
 
     <p v-if="error" class="error">{{ error }}</p>
 
@@ -60,6 +33,46 @@
         </tr>
       </tbody>
     </table>
+
+    <div v-if="showForm" class="modal-backdrop" @click.self="closeForm">
+      <section class="modal-panel">
+        <div class="actions" style="justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0;">{{ form.id ? 'Muuda inimest' : 'Lisa inimene' }}</h3>
+          <button type="button" @click="closeForm">Sulge</button>
+        </div>
+
+        <form class="form-grid" @submit.prevent="savePerson">
+          <label>
+            Eesnimi
+            <input v-model="form.first_name" required />
+          </label>
+
+          <label>
+            Perenimi
+            <input v-model="form.last_name" required />
+          </label>
+
+          <label>
+            Coetus
+            <input v-model="form.coetus" />
+          </label>
+
+          <label>
+            Konvent
+            <input v-model="form.konvent" />
+          </label>
+
+          <label>
+            <input v-model="form.is_visible" type="checkbox" /> Nahtav
+          </label>
+
+          <div class="actions" style="align-items: end">
+            <button type="submit">Salvesta</button>
+            <button type="button" @click="resetForm">Puhasta</button>
+          </div>
+        </form>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -69,6 +82,7 @@ import { apiFetchAdmin } from "../api/client";
 
 const people = ref([]);
 const error = ref("");
+const showForm = ref(false);
 
 const initialForm = () => ({
   id: null,
@@ -83,6 +97,16 @@ const form = reactive(initialForm());
 
 function resetForm() {
   Object.assign(form, initialForm());
+}
+
+function closeForm() {
+  showForm.value = false;
+  resetForm();
+}
+
+function openCreatePerson() {
+  resetForm();
+  showForm.value = true;
 }
 
 async function loadPeople() {
@@ -101,6 +125,7 @@ function editPerson(person) {
   form.coetus = person.coetus || "";
   form.konvent = person.konvent || "";
   form.is_visible = person.is_visible;
+  showForm.value = true;
 }
 
 async function savePerson() {
@@ -126,7 +151,7 @@ async function savePerson() {
       });
     }
 
-    resetForm();
+    closeForm();
     await loadPeople();
   } catch (err) {
     error.value = err.message;

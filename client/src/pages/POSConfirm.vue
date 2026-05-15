@@ -18,22 +18,22 @@
 
       <label>
         Kommentaar:
-        <textarea v-model="comment" rows="3" />
+        <textarea ref="commentInput" v-model="comment" rows="3" />
       </label>
 
       <p class="inline-summary">
         <template v-if="isCashOperation">
-          <strong>{{ posStore.product?.name }}:</strong>
+          <strong>{{ productName }}:</strong>
           {{ money(Math.abs(Number(posStore.quantity || 0))) }},
           {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
         </template>
         <template v-else-if="isCorrection">
           <strong>Parandus:</strong>
-          {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ posStore.product?.name }} = {{ money(posStore.total) }},
+          {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ productName }} = {{ money(posStore.total) }},
           {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
         </template>
         <template v-else>
-          {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ posStore.product?.name }} = {{ money(posStore.total) }},
+          {{ posStore.quantity }} {{ posStore.product?.unit || 'tk' }} x {{ productName }} = {{ money(posStore.total) }},
           {{ posStore.person?.first_name }} {{ posStore.person?.last_name }}.
         </template>
       </p>
@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { apiFetch } from "../api/client";
 import { usePosStore } from "../stores/posStore";
@@ -57,11 +57,18 @@ const router = useRouter();
 const posStore = usePosStore();
 
 const comment = ref("");
+const commentInput = ref(null);
 const saving = ref(false);
 const error = ref("");
 const successBalance = ref(null);
 const isCorrection = computed(() => Number(posStore.quantity || 0) < 0);
 const isCashOperation = computed(() => Boolean(posStore.product?.cash_operation));
+const productName = computed(() => {
+  if (posStore.product?.unit === "cl" && !posStore.product?.cash_operation) {
+    return `${posStore.product.name} (1 cl)`;
+  }
+  return posStore.product?.name || "";
+});
 
 function money(value) {
   return `${Number(value || 0).toFixed(2)} €`;
@@ -143,8 +150,7 @@ function handleKeydown(event) {
   }
 
   if (event.key === "Enter") {
-    const target = event.target;
-    if (target instanceof HTMLTextAreaElement) {
+    if (event.target instanceof HTMLTextAreaElement && event.shiftKey) {
       return;
     }
     event.preventDefault();
@@ -159,6 +165,10 @@ onMounted(() => {
   }
 
   window.addEventListener("keydown", handleKeydown);
+
+  nextTick(() => {
+    commentInput.value?.focus();
+  });
 });
 
 onUnmounted(() => {

@@ -2,53 +2,9 @@
   <section class="page">
     <h2>Tooted (Admin)</h2>
 
-    <form class="form-grid" @submit.prevent="saveProduct">
-      <label>
-        Kategooria
-        <select v-model="form.category_id">
-          <option value="">--</option>
-          <option v-for="category in categories" :key="category.id" :value="String(category.id)">
-            {{ category.name }}
-          </option>
-        </select>
-      </label>
-
-      <label>
-        Nimi
-        <input v-model="form.name" required />
-      </label>
-
-      <label>
-        Hind
-        <input v-model="form.price" type="number" step="0.01" required />
-      </label>
-
-      <label>
-        Laos
-        <input v-model="form.stock_quantity" type="number" step="1" required />
-      </label>
-
-      <label>
-        Ühik
-        <select v-model="form.unit" required>
-          <option value="tk">tk</option>
-          <option value="cl">cl</option>
-        </select>
-      </label>
-
-      <label>
-        <input v-model="form.is_visible" type="checkbox" /> Nahtav
-      </label>
-
-      <label>
-        <input v-model="form.is_inventory_tracked" type="checkbox" /> Jalgi laoseisu
-      </label>
-
-      <div class="actions" style="align-items: end">
-        <button type="submit">Salvesta</button>
-        <button type="button" @click="resetForm">Puhasta</button>
-      </div>
-    </form>
+    <div class="actions">
+      <button type="button" @click="openCreateProduct">Lisa toode</button>
+    </div>
 
     <p v-if="error" class="error">{{ error }}</p>
 
@@ -85,6 +41,63 @@
         </tr>
       </tbody>
     </table>
+
+    <div v-if="showForm" class="modal-backdrop" @click.self="closeForm">
+      <section class="modal-panel">
+        <div class="actions" style="justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0;">{{ form.id ? 'Muuda toodet' : 'Lisa toode' }}</h3>
+          <button type="button" @click="closeForm">Sulge</button>
+        </div>
+
+        <form class="form-grid" @submit.prevent="saveProduct">
+          <label>
+            Kategooria
+            <select v-model="form.category_id">
+              <option value="">--</option>
+              <option v-for="category in categories" :key="category.id" :value="String(category.id)">
+                {{ category.name }}
+              </option>
+            </select>
+          </label>
+
+          <label>
+            Nimi
+            <input v-model="form.name" required />
+          </label>
+
+          <label>
+            Hind
+            <input v-model="form.price" type="number" step="0.01" required />
+          </label>
+
+          <label>
+            Laos
+            <input v-model="form.stock_quantity" type="number" step="1" required />
+          </label>
+
+          <label>
+            Ühik
+            <select v-model="form.unit" required>
+              <option value="tk">tk</option>
+              <option value="cl">cl</option>
+            </select>
+          </label>
+
+          <label>
+            <input v-model="form.is_visible" type="checkbox" /> Nahtav
+          </label>
+
+          <label>
+            <input v-model="form.is_inventory_tracked" type="checkbox" /> Jalgi laoseisu
+          </label>
+
+          <div class="actions" style="align-items: end">
+            <button type="submit">Salvesta</button>
+            <button type="button" @click="resetForm">Puhasta</button>
+          </div>
+        </form>
+      </section>
+    </div>
   </section>
 </template>
 
@@ -96,6 +109,7 @@ import { quantity } from "../utils/format";
 const products = ref([]);
 const categories = ref([]);
 const error = ref("");
+const showForm = ref(false);
 
 const initialForm = () => ({
   id: null,
@@ -116,6 +130,16 @@ function money(value) {
 
 function resetForm() {
   Object.assign(form, initialForm());
+}
+
+function closeForm() {
+  showForm.value = false;
+  resetForm();
+}
+
+function openCreateProduct() {
+  resetForm();
+  showForm.value = true;
 }
 
 async function loadData() {
@@ -141,6 +165,7 @@ function editProduct(product) {
   form.unit = product.unit || "tk";
   form.is_visible = product.is_visible;
   form.is_inventory_tracked = product.is_inventory_tracked;
+  showForm.value = true;
 }
 
 async function saveProduct() {
@@ -168,7 +193,7 @@ async function saveProduct() {
       });
     }
 
-    resetForm();
+    closeForm();
     await loadData();
   } catch (err) {
     error.value = err.message;

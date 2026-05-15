@@ -7,7 +7,9 @@
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
     "reset:people": "node scripts/reset-people.js",
-    "import:people": "node scripts/import-people.js"
+    "fresh-start": "node scripts/prepare-fresh-start.js",
+    "import:people": "node scripts/import-people.js",
+    "import:entries": "node scripts/import-entries.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

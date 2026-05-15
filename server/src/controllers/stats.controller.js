@@ -283,6 +283,10 @@ export async function getCategoryBuyers(req, res, next) {
          pe.id,
          pe.first_name,
          pe.last_name,
+         CASE
+           WHEN COUNT(DISTINCT pr.unit) = 1 THEN MIN(pr.unit)
+           ELSE NULL
+         END AS unit,
          COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS amount,
          COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_spent
        FROM purchases pu
