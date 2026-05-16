@@ -1,13 +1,29 @@
 import { transaction } from "../db.js";
 
-const CASH_ACCOUNT_FIRST_NAME = "Sula";
-const CASH_ACCOUNT_LAST_NAME = "Raha";
-
 export async function ensureCashSetup() {
   await transaction(async (client) => {
     await ensureDecimalQuantityColumns(client);
     await client.query(
       "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS affects_debt BOOLEAN NOT NULL DEFAULT TRUE"
+    );
+    await client.query(
+      "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS paid_with_cash BOOLEAN NOT NULL DEFAULT FALSE"
+    );
+    await client.query(
+      "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS cash_operation TEXT"
+    );
+    await client.query(
+      `CREATE TABLE IF NOT EXISTS debt_adjustments (
+         id SERIAL PRIMARY KEY,
+         person_id INT NOT NULL REFERENCES people(id),
+         amount NUMERIC(10,2) NOT NULL CHECK (amount <> 0),
+         operation TEXT NOT NULL,
+         comment TEXT,
+         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+       )`
+    );
+    await client.query(
+      "CREATE INDEX IF NOT EXISTS idx_debt_adjustments_person ON debt_adjustments (person_id, created_at)"
     );
 
     await client.query(
@@ -82,7 +98,6 @@ export async function ensureCashSetup() {
        )`
     );
 
-    await ensureCashAccount(client);
     await ensurePersonDebtsView(client);
   });
 }
@@ -96,26 +111,33 @@ async function ensurePersonDebtsView(client) {
        p.last_name,
        p.coetus,
        p.konvent,
-       COALESCE(purchases.total, 0) +
-         CASE
-           WHEN lower(p.first_name) = lower('Sula')
-            AND lower(p.last_name) = lower('Raha')
-           THEN COALESCE(payments.total, 0)
-           ELSE -COALESCE(payments.total, 0)
-         END AS debt
+       COALESCE(purchases.total, 0) - COALESCE(payments.total, 0) + COALESCE(adjustments.total, 0) AS debt
      FROM people p
      LEFT JOIN (
-       SELECT person_id, SUM(total_price) AS total
+       SELECT
+         person_id,
+         SUM(
+           CASE
+             WHEN cash_operation = 'cash_deposit' THEN -ABS(total_price)
+             WHEN cash_operation = 'cash_withdrawal' THEN ABS(total_price)
+             WHEN affects_debt = TRUE THEN total_price
+             ELSE 0
+           END
+         ) AS total
        FROM purchases
        WHERE is_cancelled = FALSE
-         AND affects_debt = TRUE
        GROUP BY person_id
      ) purchases ON purchases.person_id = p.id
      LEFT JOIN (
        SELECT person_id, SUM(amount) AS total
        FROM payments
        GROUP BY person_id
-     ) payments ON payments.person_id = p.id`
+     ) payments ON payments.person_id = p.id
+     LEFT JOIN (
+       SELECT person_id, SUM(amount) AS total
+       FROM debt_adjustments
+       GROUP BY person_id
+     ) adjustments ON adjustments.person_id = p.id`
   );
 }
 
@@ -160,52 +182,57 @@ function cashOperationFor(product) {
 
   const normalizedName = String(product.name || "").toLowerCase();
   if (normalizedName === "sissemakse") {
-    return "deposit";
+    return "cash_deposit";
   }
   if (normalizedName === "väljamakse" || normalizedName === "valjamakse") {
-    return "withdrawal";
+    return "cash_withdrawal";
   }
   return null;
 }
 
-async function ensureCashAccount(client) {
-  const result = await client.query(
-    `SELECT id
-     FROM people
-     WHERE lower(first_name) = lower($1)
-       AND lower(last_name) = lower($2)
-     ORDER BY id ASC
-     LIMIT 1`,
-    [CASH_ACCOUNT_FIRST_NAME, CASH_ACCOUNT_LAST_NAME]
-  );
-
-  if (result.rowCount > 0) {
-    return result.rows[0].id;
+async function insertPurchase(
+  client,
+  {
+    personId,
+    productId,
+    quantity,
+    unitPrice,
+    comment,
+    affectsDebt = true,
+    paidWithCash = false,
+    cashOperation = null
   }
-
-  const inserted = await client.query(
-    `INSERT INTO people (first_name, last_name, coetus, konvent, is_visible, sort_order)
-     VALUES ($1, $2, $3, $4, TRUE, 3000)
-     RETURNING id`,
-    [CASH_ACCOUNT_FIRST_NAME, CASH_ACCOUNT_LAST_NAME, "3000/I", "pseudo"]
-  );
-
-  return inserted.rows[0].id;
-}
-
-async function insertPurchase(client, { personId, productId, quantity, unitPrice, comment }) {
+) {
   const totalPrice = Number(unitPrice) * Number(quantity);
   const result = await client.query(
-    `INSERT INTO purchases (person_id, product_id, quantity, unit_price, total_price, comment)
-     VALUES ($1, $2, $3, $4, $5, $6)
+    `INSERT INTO purchases
+       (person_id, product_id, quantity, unit_price, total_price, comment, affects_debt, paid_with_cash, cash_operation)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
      RETURNING *`,
-    [personId, productId, quantity, unitPrice, totalPrice, comment || null]
+    [
+      personId,
+      productId,
+      quantity,
+      unitPrice,
+      totalPrice,
+      comment || null,
+      affectsDebt,
+      paidWithCash,
+      cashOperation
+    ]
   );
 
   return result.rows[0];
 }
 
-export async function createPurchase({ personId, productId, quantity, maxPurchaseQuantity = 100, comment }) {
+export async function createPurchase({
+  personId,
+  productId,
+  quantity,
+  maxPurchaseQuantity = 100,
+  comment,
+  paidWithCash = false
+}) {
   return transaction(async (client) => {
     const personResult = await client.query(
       "SELECT id, first_name, last_name FROM people WHERE id = $1",
@@ -243,9 +270,16 @@ export async function createPurchase({ personId, productId, quantity, maxPurchas
     const product = productResult.rows[0];
     const unitPrice = Number(product.price);
     const cashOperation = cashOperationFor(product);
+    const cashPaid = Boolean(paidWithCash);
 
     if (!cashOperation && (!Number.isFinite(Number(quantity)) || Math.abs(Number(quantity)) > maxPurchaseQuantity)) {
       const err = new Error(`quantity must be between -${maxPurchaseQuantity} and ${maxPurchaseQuantity}`);
+      err.status = 400;
+      throw err;
+    }
+
+    if (!cashOperation && cashPaid && Number(quantity) < 0) {
+      const err = new Error("cash payment cannot be used for negative corrections");
       err.status = 400;
       throw err;
     }
@@ -258,37 +292,19 @@ export async function createPurchase({ personId, productId, quantity, maxPurchas
         throw err;
       }
 
-      const cashAccountId = await ensureCashAccount(client);
-      if (Number(personId) === Number(cashAccountId)) {
-        const err = new Error("cash operation person cannot be the Sula Raha account");
-        err.status = 400;
-        throw err;
-      }
-
-      const selectedPerson = personResult.rows[0];
-      const selectedPersonName = `${selectedPerson.first_name} ${selectedPerson.last_name}`;
       const baseComment = comment || product.name;
       const cashUnitPrice = Math.abs(unitPrice) || 1;
-      const selectedQuantity = cashOperation === "deposit" ? -amount : amount;
-      const cashQuantity = selectedQuantity;
 
-      const selectedPurchase = await insertPurchase(client, {
+      return insertPurchase(client, {
         personId,
         productId,
-        quantity: selectedQuantity,
+        quantity: amount,
         unitPrice: cashUnitPrice,
-        comment: baseComment
+        comment: baseComment,
+        affectsDebt: true,
+        paidWithCash: false,
+        cashOperation
       });
-
-      await insertPurchase(client, {
-        personId: cashAccountId,
-        productId,
-        quantity: cashQuantity,
-        unitPrice: cashUnitPrice,
-        comment: `${baseComment} (${selectedPersonName})`
-      });
-
-      return selectedPurchase;
     }
 
     const purchase = await insertPurchase(client, {
@@ -296,7 +312,9 @@ export async function createPurchase({ personId, productId, quantity, maxPurchas
       productId,
       quantity,
       unitPrice,
-      comment
+      comment,
+      affectsDebt: !cashPaid,
+      paidWithCash: cashPaid
     });
 
     if (product.is_inventory_tracked) {

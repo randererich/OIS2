@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS purchases (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   is_cancelled BOOLEAN NOT NULL DEFAULT FALSE,
   affects_debt BOOLEAN NOT NULL DEFAULT TRUE,
+  paid_with_cash BOOLEAN NOT NULL DEFAULT FALSE,
+  cash_operation TEXT,
   cancelled_at TIMESTAMPTZ,
   cancellation_reason TEXT
 );
@@ -50,10 +52,25 @@ CREATE TABLE IF NOT EXISTS purchases (
 ALTER TABLE purchases
 ADD COLUMN IF NOT EXISTS affects_debt BOOLEAN NOT NULL DEFAULT TRUE;
 
+ALTER TABLE purchases
+ADD COLUMN IF NOT EXISTS paid_with_cash BOOLEAN NOT NULL DEFAULT FALSE;
+
+ALTER TABLE purchases
+ADD COLUMN IF NOT EXISTS cash_operation TEXT;
+
 CREATE TABLE IF NOT EXISTS payments (
   id SERIAL PRIMARY KEY,
   person_id INT NOT NULL REFERENCES people(id),
   amount NUMERIC(10,2) NOT NULL CHECK (amount > 0),
+  comment TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS debt_adjustments (
+  id SERIAL PRIMARY KEY,
+  person_id INT NOT NULL REFERENCES people(id),
+  amount NUMERIC(10,2) NOT NULL CHECK (amount <> 0),
+  operation TEXT NOT NULL,
   comment TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -129,15 +146,6 @@ WHERE NOT EXISTS (
     AND p.name = x.name
 );
 
-INSERT INTO people (first_name, last_name, coetus, konvent, is_visible, sort_order)
-SELECT 'Sula', 'Raha', '3000/I', 'pseudo', TRUE, 3000
-WHERE NOT EXISTS (
-  SELECT 1
-  FROM people
-  WHERE lower(first_name) = lower('Sula')
-    AND lower(last_name) = lower('Raha')
-);
-
 ALTER TABLE inventory_count_reports
 ADD COLUMN IF NOT EXISTS valvevarv TEXT;
 
@@ -207,26 +215,33 @@ SELECT
   p.last_name,
   p.coetus,
   p.konvent,
-  COALESCE(purchases.total, 0) +
-    CASE
-      WHEN lower(p.first_name) = lower('Sula')
-       AND lower(p.last_name) = lower('Raha')
-      THEN COALESCE(payments.total, 0)
-      ELSE -COALESCE(payments.total, 0)
-    END AS debt
+  COALESCE(purchases.total, 0) - COALESCE(payments.total, 0) + COALESCE(adjustments.total, 0) AS debt
 FROM people p
 LEFT JOIN (
-  SELECT person_id, SUM(total_price) AS total
+  SELECT
+    person_id,
+    SUM(
+      CASE
+        WHEN cash_operation = 'cash_deposit' THEN -ABS(total_price)
+        WHEN cash_operation = 'cash_withdrawal' THEN ABS(total_price)
+        WHEN affects_debt = TRUE THEN total_price
+        ELSE 0
+      END
+    ) AS total
   FROM purchases
   WHERE is_cancelled = FALSE
-    AND affects_debt = TRUE
   GROUP BY person_id
 ) purchases ON purchases.person_id = p.id
 LEFT JOIN (
   SELECT person_id, SUM(amount) AS total
   FROM payments
   GROUP BY person_id
-) payments ON payments.person_id = p.id;
+) payments ON payments.person_id = p.id
+LEFT JOIN (
+  SELECT person_id, SUM(amount) AS total
+  FROM debt_adjustments
+  GROUP BY person_id
+) adjustments ON adjustments.person_id = p.id;
 
 CREATE INDEX IF NOT EXISTS idx_people_visible_sort ON people (is_visible, sort_order, last_name, first_name);
 CREATE INDEX IF NOT EXISTS idx_people_name_search ON people (last_name, first_name) WHERE is_visible = TRUE;
@@ -238,6 +253,7 @@ CREATE INDEX IF NOT EXISTS idx_purchases_person ON purchases (person_id, is_canc
 CREATE INDEX IF NOT EXISTS idx_purchases_person_created ON purchases (person_id, created_at) WHERE is_cancelled = FALSE;
 CREATE INDEX IF NOT EXISTS idx_purchases_product ON purchases (product_id, is_cancelled);
 CREATE INDEX IF NOT EXISTS idx_payments_person ON payments (person_id);
+CREATE INDEX IF NOT EXISTS idx_debt_adjustments_person ON debt_adjustments (person_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_created ON payments (created_at);
 CREATE INDEX IF NOT EXISTS idx_purchases_created_at ON purchases (created_at, is_cancelled);
 CREATE INDEX IF NOT EXISTS idx_inventory_counts_report ON inventory_counts (report_id);

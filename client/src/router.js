@@ -10,6 +10,7 @@ import People from "./pages/People.vue";
 import Products from "./pages/Products.vue";
 import Purchases from "./pages/Purchases.vue";
 import Stats from "./pages/Stats.vue";
+import AdminDebts from "./pages/admin/AdminDebts.vue";
 import AdminPassword from "./pages/admin/AdminHome.vue";
 import AdminInventoryCount from "./pages/admin/AdminInventoryCount.vue";
 import AdminInventoryReports from "./pages/admin/AdminInventoryReports.vue";
@@ -30,6 +31,7 @@ const routes = [
   { path: "/admin/products", component: Products, meta: { requiresAdmin: true } },
   { path: "/admin/categories", component: AdminCategories, meta: { requiresAdmin: true } },
   { path: "/admin/people", component: People, meta: { requiresAdmin: true } },
+  { path: "/admin/debts", component: AdminDebts, meta: { requiresAdmin: true } },
   { path: "/admin/inventory", component: AdminInventoryReports, meta: { requiresAdmin: true } },
   { path: "/admin/stock-overview", component: AdminStockOverview, meta: { requiresAdmin: true } },
   { path: "/admin/stock-add", redirect: "/admin/stock-overview", meta: { requiresAdmin: true } },

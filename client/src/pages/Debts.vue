@@ -93,7 +93,7 @@
             <tr v-for="purchase in monthlyPurchases" :key="purchase.id" :class="{ cancelled: purchase.is_cancelled }">
               <td>{{ formatDate(purchase.created_at) }}</td>
               <td>{{ purchase.product_name }}</td>
-              <td>{{ quantity(purchase.quantity) }} {{ purchase.unit || 'tk' }}</td>
+              <td>{{ purchaseQuantity(purchase) }}</td>
               <td>{{ money(purchase.total_price) }}</td>
               <td>{{ purchase.comment || '-' }}</td>
               <td>{{ purchaseStatus(purchase) }}</td>
@@ -108,6 +108,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { apiFetch } from "../api/client";
+import { formatDisplayDateTime } from "../utils/date";
 import { quantity } from "../utils/format";
 
 const debts = ref([]);
@@ -125,7 +126,7 @@ function money(value) {
 }
 
 function formatDate(value) {
-  return new Date(value).toLocaleString("et-EE");
+  return formatDisplayDateTime(value);
 }
 
 function balanceClass(balance) {
@@ -222,10 +223,35 @@ function purchaseStatus(purchase) {
   if (purchase.is_cancelled) {
     return "Tühistatud";
   }
+  if (purchase.debt_adjustment_operation === "debt_zero") {
+    return "vōla nullimine";
+  }
+  if (purchase.debt_adjustment_operation === "debt_add") {
+    return "Võla lisamine";
+  }
+  if (purchase.debt_adjustment_operation === "debt_remove") {
+    return "Võla vähendamine";
+  }
   if (Number(purchase.quantity || 0) < 0) {
     return "Parandus";
   }
+  if (purchase.cash_operation === "cash_deposit") {
+    return "Sissemakse";
+  }
+  if (purchase.cash_operation === "cash_withdrawal") {
+    return "Väljamakse";
+  }
+  if (purchase.paid_with_cash) {
+    return "Sularahas";
+  }
   return "-";
+}
+
+function purchaseQuantity(purchase) {
+  if (purchase.debt_adjustment_operation) {
+    return "-";
+  }
+  return `${quantity(purchase.quantity)} ${purchase.unit || "tk"}`;
 }
 
 async function loadData() {

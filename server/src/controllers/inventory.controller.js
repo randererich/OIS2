@@ -94,12 +94,20 @@ export async function createInventoryReportController(req, res, next) {
 export async function getCashBalance(req, res, next) {
   try {
     const result = await query(
-      `SELECT debt AS balance
-       FROM person_debts
-       WHERE lower(first_name) = lower('Sula')
-         AND lower(last_name) = lower('Raha')
-       ORDER BY id ASC
-       LIMIT 1`
+      `SELECT
+         COALESCE(
+           SUM(
+             CASE
+               WHEN cash_operation = 'cash_deposit' THEN ABS(total_price)
+               WHEN cash_operation = 'cash_withdrawal' THEN -ABS(total_price)
+               WHEN paid_with_cash = TRUE THEN total_price
+               ELSE 0
+             END
+           ),
+           0
+         ) AS balance
+       FROM purchases
+       WHERE is_cancelled = FALSE`
     );
 
     const balance = Number(result.rows[0]?.balance || 0);

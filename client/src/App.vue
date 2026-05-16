@@ -18,6 +18,7 @@
         <RouterLink to="/admin/products">Tooted</RouterLink>
         <RouterLink to="/admin/categories">Kategooriad</RouterLink>
         <RouterLink to="/admin/people">Inimesed</RouterLink>
+        <RouterLink to="/admin/debts">Võlad</RouterLink>
         <RouterLink to="/admin/stock-overview">Varud</RouterLink>
         <RouterLink to="/admin/inventory">Inventuur</RouterLink>
         <RouterLink to="/admin/purchases">Kirjed (admin)</RouterLink>

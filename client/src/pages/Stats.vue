@@ -73,6 +73,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { apiFetch } from "../api/client";
+import { formatDateInput } from "../utils/date";
 import { quantity } from "../utils/format";
 
 const statType = ref("category-buyers");
@@ -200,13 +201,6 @@ function addDateParams(params) {
   }
 }
 
-function formatInputDate(value) {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 function firstThursday(year, monthIndex) {
   const date = new Date(year, monthIndex, 1);
   const offset = (4 - date.getDay() + 7) % 7;
@@ -216,19 +210,28 @@ function firstThursday(year, monthIndex) {
 
 function semesterRange(today = new Date()) {
   const year = today.getFullYear();
-  const thisAutumnStart = firstThursday(year, 8);
-  const thisJuneEnd = firstThursday(year, 5);
+  const springStart = firstThursday(year, 1);
+  const springEnd = firstThursday(year, 5);
+  const autumnStart = firstThursday(year, 8);
+  const autumnEnd = firstThursday(year, 11);
 
-  if (today >= thisAutumnStart) {
+  if (today < springStart) {
     return {
-      start: thisAutumnStart,
-      end: firstThursday(year + 1, 5)
+      start: firstThursday(year - 1, 8),
+      end: firstThursday(year - 1, 11)
+    };
+  }
+
+  if (today < autumnStart) {
+    return {
+      start: springStart,
+      end: springEnd
     };
   }
 
   return {
-    start: firstThursday(year - 1, 8),
-    end: thisJuneEnd
+    start: autumnStart,
+    end: autumnEnd
   };
 }
 
@@ -243,19 +246,19 @@ async function applyPreset(preset) {
   if (preset === "week") {
     const start = new Date(today);
     start.setDate(start.getDate() - 6);
-    dateFrom.value = formatInputDate(start);
-    dateTo.value = formatInputDate(today);
+    dateFrom.value = formatDateInput(start);
+    dateTo.value = formatDateInput(today);
   }
 
   if (preset === "month") {
-    dateFrom.value = formatInputDate(new Date(today.getFullYear(), today.getMonth(), 1));
-    dateTo.value = formatInputDate(today);
+    dateFrom.value = formatDateInput(new Date(today.getFullYear(), today.getMonth(), 1));
+    dateTo.value = formatDateInput(today);
   }
 
   if (preset === "semester") {
     const range = semesterRange(today);
-    dateFrom.value = formatInputDate(range.start);
-    dateTo.value = formatInputDate(range.end);
+    dateFrom.value = formatDateInput(range.start);
+    dateTo.value = formatDateInput(range.end);
   }
 
   await loadStats();

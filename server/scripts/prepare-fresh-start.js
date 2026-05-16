@@ -8,6 +8,25 @@ async function ensureCompatibility(client) {
   await client.query(
     "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS affects_debt BOOLEAN NOT NULL DEFAULT TRUE"
   );
+  await client.query(
+    "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS paid_with_cash BOOLEAN NOT NULL DEFAULT FALSE"
+  );
+  await client.query(
+    "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS cash_operation TEXT"
+  );
+  await client.query(
+    `CREATE TABLE IF NOT EXISTS debt_adjustments (
+       id SERIAL PRIMARY KEY,
+       person_id INT NOT NULL REFERENCES people(id),
+       amount NUMERIC(10,2) NOT NULL CHECK (amount <> 0),
+       operation TEXT NOT NULL,
+       comment TEXT,
+       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+     )`
+  );
+  await client.query(
+    "CREATE INDEX IF NOT EXISTS idx_debt_adjustments_person ON debt_adjustments (person_id, created_at)"
+  );
 
   await client.query(
     `CREATE OR REPLACE VIEW person_debts AS
@@ -17,26 +36,33 @@ async function ensureCompatibility(client) {
        p.last_name,
        p.coetus,
        p.konvent,
-       COALESCE(purchases.total, 0) +
-         CASE
-           WHEN lower(p.first_name) = lower('Sula')
-            AND lower(p.last_name) = lower('Raha')
-           THEN COALESCE(payments.total, 0)
-           ELSE -COALESCE(payments.total, 0)
-         END AS debt
+       COALESCE(purchases.total, 0) - COALESCE(payments.total, 0) + COALESCE(adjustments.total, 0) AS debt
      FROM people p
      LEFT JOIN (
-       SELECT person_id, SUM(total_price) AS total
+       SELECT
+         person_id,
+         SUM(
+           CASE
+             WHEN cash_operation = 'cash_deposit' THEN -ABS(total_price)
+             WHEN cash_operation = 'cash_withdrawal' THEN ABS(total_price)
+             WHEN affects_debt = TRUE THEN total_price
+             ELSE 0
+           END
+         ) AS total
        FROM purchases
        WHERE is_cancelled = FALSE
-         AND affects_debt = TRUE
        GROUP BY person_id
      ) purchases ON purchases.person_id = p.id
      LEFT JOIN (
        SELECT person_id, SUM(amount) AS total
        FROM payments
        GROUP BY person_id
-     ) payments ON payments.person_id = p.id`
+     ) payments ON payments.person_id = p.id
+     LEFT JOIN (
+       SELECT person_id, SUM(amount) AS total
+       FROM debt_adjustments
+       GROUP BY person_id
+     ) adjustments ON adjustments.person_id = p.id`
   );
 }
 
@@ -52,6 +78,9 @@ async function getCounts() {
     UNION ALL
     SELECT 'payments' AS label, COUNT(*)::INT AS row_count
     FROM payments
+    UNION ALL
+    SELECT 'debt_adjustments' AS label, COUNT(*)::INT AS row_count
+    FROM debt_adjustments
     ORDER BY label
   `);
 
@@ -81,8 +110,17 @@ async function main() {
 
   await transaction(async (client) => {
     await ensureCompatibility(client);
-    await client.query("UPDATE purchases SET affects_debt = FALSE WHERE affects_debt = TRUE");
+    await client.query(
+      `UPDATE purchases
+       SET affects_debt = FALSE,
+           paid_with_cash = FALSE,
+           cash_operation = NULL
+       WHERE affects_debt = TRUE
+          OR paid_with_cash = TRUE
+          OR cash_operation IS NOT NULL`
+    );
     await client.query("TRUNCATE TABLE payments RESTART IDENTITY");
+    await client.query("TRUNCATE TABLE debt_adjustments RESTART IDENTITY");
   });
 
   console.log("");

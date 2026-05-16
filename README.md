@@ -107,6 +107,20 @@ DATABASE_URL=postgresql://konvent:konvent@localhost:5433/konvent_pos
 
 The Docker client uses Vite proxy `/api -> http://server:3000`, configured in `client/vite.config.js`.
 
+## Legacy Statistics Import
+
+Old `Kirjed.csv` rows can be imported for statistics without creating starting debts.
+
+Recommended fresh-start flow:
+
+```bash
+npm --prefix server run import:people
+npm --prefix server run import:entries -- --replace
+npm --prefix server run fresh-start -- --yes
+```
+
+By default, `import:entries` imports purchases with `affects_debt = false`, so they remain visible to statistics but are ignored by `person_debts`. `fresh-start` is dry-run by default; `--yes` marks existing purchases as stats-only and clears payments so everyone starts with zero debt.
+
 ## Main Workflows
 
 ### Purchase Entry

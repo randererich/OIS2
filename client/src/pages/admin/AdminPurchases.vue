@@ -45,6 +45,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { apiFetchAdmin } from "../../api/client";
+import { formatDisplayDateTime } from "../../utils/date";
 import { quantity } from "../../utils/format";
 
 const purchases = ref([]);
@@ -63,11 +64,20 @@ function purchaseStatus(purchase) {
   if (Number(purchase.quantity || 0) < 0) {
     return "Parandus";
   }
+  if (purchase.cash_operation === "cash_deposit") {
+    return "Sissemakse";
+  }
+  if (purchase.cash_operation === "cash_withdrawal") {
+    return "Väljamakse";
+  }
+  if (purchase.paid_with_cash) {
+    return "Sularahas";
+  }
   return "-";
 }
 
 function formatDate(value) {
-  return new Date(value).toLocaleString("et-EE");
+  return formatDisplayDateTime(value);
 }
 
 async function loadPurchases() {

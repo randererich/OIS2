@@ -7,10 +7,10 @@ function cashOperationFor(categoryName, productName) {
 
   const normalizedName = String(productName || "").toLowerCase();
   if (normalizedName === "sissemakse") {
-    return "deposit";
+    return "cash_deposit";
   }
   if (normalizedName === "väljamakse" || normalizedName === "valjamakse") {
-    return "withdrawal";
+    return "cash_withdrawal";
   }
   return null;
 }

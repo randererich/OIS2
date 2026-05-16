@@ -1,4 +1,4 @@
-import { query } from "../db.js";
+import { query, transaction } from "../db.js";
 
 export async function getPayments(req, res, next) {
   try {
@@ -64,6 +64,104 @@ export async function getDebts(req, res, next) {
        ORDER BY debt DESC, last_name ASC, first_name ASC`
     );
     res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+}
+
+function normalizeDebtAdjustment(body) {
+  const operation = String(body.operation || "").trim();
+  const amount = Math.abs(Number(body.amount || 0));
+
+  if (operation === "add") {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return { error: "positive amount is required" };
+    }
+    return { amount, operation: "debt_add" };
+  }
+
+  if (operation === "remove") {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return { error: "positive amount is required" };
+    }
+    return { amount: -amount, operation: "debt_remove" };
+  }
+
+  if (operation === "zero") {
+    return { operation: "debt_zero" };
+  }
+
+  return { error: "operation must be add, remove or zero" };
+}
+
+export async function createDebtAdjustment(req, res, next) {
+  try {
+    const personId = Number(req.body.person_id);
+    if (!personId) {
+      return res.status(400).json({ error: "valid person_id is required" });
+    }
+
+    const normalized = normalizeDebtAdjustment(req.body);
+    if (normalized.error) {
+      return res.status(400).json({ error: normalized.error });
+    }
+
+    const result = await transaction(async (client) => {
+      const lockResult = await client.query(
+        "SELECT id FROM people WHERE id = $1 FOR UPDATE",
+        [personId]
+      );
+
+      if (lockResult.rowCount === 0) {
+        const error = new Error("Person not found");
+        error.status = 404;
+        throw error;
+      }
+
+      const personResult = await client.query(
+        `SELECT id, first_name, last_name, debt
+         FROM person_debts
+         WHERE id = $1`,
+        [personId]
+      );
+
+      const currentDebt = Number(personResult.rows[0].debt || 0);
+      const amount = normalized.operation === "debt_zero"
+        ? Number((-currentDebt).toFixed(2))
+        : normalized.amount;
+
+      if (!Number.isFinite(amount) || amount === 0) {
+        const error = new Error("debt is already zero");
+        error.status = 400;
+        throw error;
+      }
+
+      const inserted = await client.query(
+        `INSERT INTO debt_adjustments (person_id, amount, operation, comment)
+         VALUES ($1, $2, $3, $4)
+         RETURNING *`,
+        [
+          personId,
+          amount,
+          normalized.operation,
+          String(req.body.comment || "").trim() || null
+        ]
+      );
+
+      const balanceResult = await client.query(
+        `SELECT id, first_name, last_name, coetus, konvent, debt
+         FROM person_debts
+         WHERE id = $1`,
+        [personId]
+      );
+
+      return {
+        adjustment: inserted.rows[0],
+        person: balanceResult.rows[0]
+      };
+    });
+
+    res.status(201).json(result);
   } catch (error) {
     next(error);
   }

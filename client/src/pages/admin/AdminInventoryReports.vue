@@ -328,6 +328,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { apiFetchAdmin } from "../../api/client";
+import { formatDateInput, formatDisplayDateTime } from "../../utils/date";
 import { quantity, signedQuantity } from "../../utils/format";
 
 const reports = ref([]);
@@ -335,8 +336,8 @@ const detail = ref(null);
 const error = ref("");
 const today = new Date();
 const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-const dateFrom = ref(formatInputDate(monthStart));
-const dateTo = ref(formatInputDate(today));
+const dateFrom = ref(formatDateInput(monthStart));
+const dateTo = ref(formatDateInput(today));
 const monthlyLoading = ref(false);
 const monthlyError = ref("");
 const monthlyOverview = ref(null);
@@ -355,13 +356,6 @@ const emptyMonthlySummary = {
   overage_quantity: 0,
   net_difference: 0
 };
-
-function formatInputDate(value) {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 const monthlySummary = computed(() => monthlyOverview.value?.summary || emptyMonthlySummary);
 const monthlyReports = computed(() => monthlyOverview.value?.reports || []);
@@ -414,16 +408,11 @@ const filteredDetailRows = computed(() => {
 });
 
 function formatDate(value) {
-  return new Date(value).toLocaleString("et-EE");
+  return formatDisplayDateTime(value);
 }
 
 function formatShortDate(value) {
-  return new Date(value).toLocaleString("et-EE", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
+  return formatDisplayDateTime(value);
 }
 
 function money(value) {

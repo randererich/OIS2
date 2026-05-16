@@ -38,9 +38,14 @@
         </template>
       </p>
 
-      <button type="button" :disabled="saving" @click="submit">
-        {{ saving ? 'Salvestan...' : 'Kinnita' }}
-      </button>
+      <div class="actions confirm-actions">
+        <button type="button" :disabled="saving" @click="submit(false)">
+          {{ saving ? 'Salvestan...' : 'Kinnita' }}
+        </button>
+        <button v-if="canPayWithCash" type="button" :disabled="saving" @click="submit(true)">
+          {{ saving ? 'Salvestan...' : 'Kinnita sularahas' }}
+        </button>
+      </div>
 
       <p v-if="error" class="error">{{ error }}</p>
     </template>
@@ -63,6 +68,7 @@ const error = ref("");
 const successBalance = ref(null);
 const isCorrection = computed(() => Number(posStore.quantity || 0) < 0);
 const isCashOperation = computed(() => Boolean(posStore.product?.cash_operation));
+const canPayWithCash = computed(() => !isCashOperation.value && !isCorrection.value);
 const productName = computed(() => {
   if (posStore.product?.unit === "cl" && !posStore.product?.cash_operation) {
     return `${posStore.product.name} (1 cl)`;
@@ -90,7 +96,7 @@ function goHome() {
   router.push("/");
 }
 
-async function submit() {
+async function submit(paidWithCash = false) {
   if (!posStore.product || !posStore.person) {
     return;
   }
@@ -107,7 +113,8 @@ async function submit() {
         person_id: personId,
         product_id: posStore.product.id,
         quantity: posStore.quantity,
-        comment: comment.value.trim() || null
+        comment: comment.value.trim() || null,
+        paid_with_cash: paidWithCash
       })
     });
 
@@ -134,7 +141,7 @@ function handleEnter() {
     return;
   }
   if (!saving.value) {
-    submit();
+    submit(false);
   }
 }
 
@@ -197,6 +204,10 @@ onUnmounted(() => {
   align-self: center;
   font-size: 1.3rem;
   padding: 12px 20px;
+}
+
+.confirm-actions {
+  justify-content: center;
 }
 
 </style>

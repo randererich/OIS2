@@ -74,7 +74,7 @@ export async function getPurchases(req, res, next) {
 
 export async function postPurchase(req, res, next) {
   try {
-    const { person_id, product_id, quantity, comment } = req.body;
+    const { person_id, product_id, quantity, comment, paid_with_cash } = req.body;
     const parsedQuantity = Number(quantity);
 
     if (!person_id || !product_id || !Number.isFinite(parsedQuantity) || parsedQuantity === 0) {
@@ -86,7 +86,8 @@ export async function postPurchase(req, res, next) {
       productId: Number(product_id),
       quantity: parsedQuantity,
       maxPurchaseQuantity: MAX_PURCHASE_QUANTITY,
-      comment
+      comment,
+      paidWithCash: paid_with_cash === true
     });
 
     res.status(201).json(purchase);

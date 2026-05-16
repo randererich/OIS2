@@ -376,6 +376,12 @@ async function ensurePurchaseSchemaCompatibility() {
   await query(
     "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS affects_debt BOOLEAN NOT NULL DEFAULT TRUE"
   );
+  await query(
+    "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS paid_with_cash BOOLEAN NOT NULL DEFAULT FALSE"
+  );
+  await query(
+    "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS cash_operation TEXT"
+  );
 }
 
 function roundMoney(value) {
@@ -482,6 +488,8 @@ function mapEntries({ productIds, legacyProductMap, peopleIds }) {
       createdAt,
       false,
       affectsDebt,
+      false,
+      null,
     ]);
 
     const productStats = perProduct.get(productConfig.name) || {
@@ -594,6 +602,8 @@ async function importEntries() {
         "created_at",
         "is_cancelled",
         "affects_debt",
+        "paid_with_cash",
+        "cash_operation",
       ],
       mapped.purchases
     );

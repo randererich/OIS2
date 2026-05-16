@@ -193,22 +193,47 @@ export async function getPersonMonthlyPurchases(req, res, next) {
         const unitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT AS unit";
 
     const purchasesResult = await query(
-      `SELECT
-         pu.id,
-         pu.created_at,
-         pr.name AS product_name,
-          ${unitSql},
-         pu.quantity,
-         pu.total_price,
-         pu.comment,
-         pu.is_cancelled
-       FROM purchases pu
-       JOIN products pr ON pr.id = pu.product_id
-       WHERE pu.person_id = $1
-         AND pu.created_at >= $2
-         AND pu.created_at < $3
-         ${cancellationFilter}
-       ORDER BY pu.created_at DESC`,
+      `SELECT *
+       FROM (
+         SELECT
+           pu.id::TEXT AS id,
+           pu.created_at,
+           pr.name AS product_name,
+           ${unitSql},
+           pu.quantity,
+           pu.total_price,
+           pu.comment,
+           pu.is_cancelled,
+           pu.paid_with_cash,
+           pu.cash_operation,
+           NULL::TEXT AS debt_adjustment_operation
+         FROM purchases pu
+         JOIN products pr ON pr.id = pu.product_id
+         WHERE pu.person_id = $1
+           AND pu.created_at >= $2
+           AND pu.created_at < $3
+           ${cancellationFilter}
+
+         UNION ALL
+
+         SELECT
+           CONCAT('debt-adjustment-', da.id) AS id,
+           da.created_at,
+           'Võla korrigeerimine' AS product_name,
+           ''::TEXT AS unit,
+           NULL::NUMERIC(10,2) AS quantity,
+           da.amount AS total_price,
+           da.comment,
+           FALSE AS is_cancelled,
+           FALSE AS paid_with_cash,
+           NULL::TEXT AS cash_operation,
+           da.operation AS debt_adjustment_operation
+         FROM debt_adjustments da
+         WHERE da.person_id = $1
+           AND da.created_at >= $2
+           AND da.created_at < $3
+       ) rows
+       ORDER BY created_at DESC`,
       params
     );
 
