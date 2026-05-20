@@ -53,17 +53,24 @@
     </table>
 
     <section class="panel" style="margin-top: 2rem;">
-      <h3>💶 Sularaha inventuur</h3>
-      <div class="form-grid">
-        <label>
-          Loetud sularaha (€)
-          <input v-model.number="cashCounted" type="number" step="0.01" placeholder="0.00" />
+      <h3>Sularaha inventuur</h3>
+      <div class="cash-count-grid">
+        <label v-for="denomination in cashDenominations" :key="denomination.cents">
+          <span>{{ denomination.label }}</span>
+          <input
+            v-model="cashCounts[denomination.cents]"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            required
+          />
         </label>
       </div>
       <p>
-        Arvete järgi: <strong>{{ cashBalance }}</strong> €
-        | Loetud: <strong>{{ cashCounted }}</strong> €
-        | Erinevus: <strong :class="cashDifference >= 0 ? 'cash-ok' : 'cash-low'">{{ cashDifference }}</strong> €
+        Arvete järgi: <strong>{{ cashBalanceFormatted }}</strong> €
+        | Loetud: <strong>{{ cashCountedFormatted }}</strong> €
+        | Erinevus: <strong :class="cashDifference >= 0 ? 'cash-ok' : 'cash-low'">{{ cashDifferenceFormatted }}</strong> €
       </p>
     </section>
 
@@ -88,7 +95,21 @@ const valvevarv = ref("");
 const reportComment = ref("");
 const counted = reactive({});
 const comments = reactive({});
-const cashCounted = ref(0);
+const cashDenominations = [
+  { cents: 10000, label: "100 €" },
+  { cents: 5000, label: "50 €" },
+  { cents: 2000, label: "20 €" },
+  { cents: 1000, label: "10 €" },
+  { cents: 500, label: "5 €" },
+  { cents: 200, label: "2 €" },
+  { cents: 100, label: "1 €" },
+  { cents: 50, label: "50 s" },
+  { cents: 20, label: "20 s" },
+  { cents: 10, label: "10 s" }
+];
+const cashCounts = reactive(
+  Object.fromEntries(cashDenominations.map((denomination) => [denomination.cents, "0"]))
+);
 const cashBalance = ref(0);
 
 function statusInfo(totalExpected, totalCounted) {
@@ -135,9 +156,22 @@ const summary = computed(() => {
 
 const summaryClass = computed(() => summary.value.className);
 
-const cashDifference = computed(() => {
-  return (Number(cashCounted.value || 0) - Number(cashBalance.value || 0)).toFixed(2);
+const cashCountedCents = computed(() => {
+  return cashDenominations.reduce((sum, denomination) => {
+    const count = Number(cashCounts[denomination.cents] || 0);
+    return Number.isInteger(count) && count >= 0 ? sum + denomination.cents * count : sum;
+  }, 0);
 });
+
+const cashCounted = computed(() => cashCountedCents.value / 100);
+
+const cashDifference = computed(() => {
+  return cashCounted.value - Number(cashBalance.value || 0);
+});
+
+const cashBalanceFormatted = computed(() => Number(cashBalance.value || 0).toFixed(2));
+const cashCountedFormatted = computed(() => cashCounted.value.toFixed(2));
+const cashDifferenceFormatted = computed(() => cashDifference.value.toFixed(2));
 
 async function loadCountProducts() {
   loadingProducts.value = true;
@@ -153,7 +187,7 @@ async function loadCountProducts() {
     // Load cash balance from the system
     const cashData = await apiFetch("/inventory/cash-balance");
     cashBalance.value = Number(cashData.balance || 0);
-    cashCounted.value = 0;
+    resetCashCounts();
   } catch (err) {
     error.value = err.message;
   } finally {
@@ -168,6 +202,25 @@ function rowClass(product) {
     return "";
   }
   return countedValue >= expected ? "inventory-row-ok" : "inventory-row-low";
+}
+
+function resetCashCounts() {
+  for (const denomination of cashDenominations) {
+    cashCounts[denomination.cents] = "0";
+  }
+}
+
+function validateCashCounts() {
+  for (const denomination of cashDenominations) {
+    const rawValue = cashCounts[denomination.cents];
+    const value = Number(rawValue);
+
+    if (rawValue === "" || !Number.isInteger(value) || value < 0) {
+      return `${denomination.label} kogus peab olema 0 või positiivne täisarv.`;
+    }
+  }
+
+  return "";
 }
 
 async function saveReport() {
@@ -195,6 +248,12 @@ async function saveReport() {
     });
   }
 
+  const cashError = validateCashCounts();
+  if (cashError) {
+    error.value = cashError;
+    return;
+  }
+
   try {
     const result = await apiFetch("/inventory/reports", {
       method: "POST",
@@ -202,7 +261,7 @@ async function saveReport() {
         valvevarv: valvevarv.value.trim(),
         comment: reportComment.value || null,
         counts,
-        cash_counted: Number(cashCounted.value || 0)
+        cash_counted: cashCounted.value
       })
     });
 
@@ -249,6 +308,21 @@ onMounted(async () => {
 
 .cash-low {
   color: #d32f2f;
+  font-weight: 600;
+}
+
+.cash-count-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+}
+
+.cash-count-grid label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.cash-count-grid span {
   font-weight: 600;
 }
 

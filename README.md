@@ -406,6 +406,26 @@ Common server startup problems:
 - production database schema is older than the code expects
 - startup compatibility SQL failed
 
+Production page shows `502 Bad Gateway` or raw nginx HTML:
+
+This means the browser reached nginx, but nginx could not reach the API server. Check production from the VM:
+
+```bash
+cd /home/debian/OIS2
+docker compose ps
+docker compose logs --tail=100 server
+curl -i http://localhost:3000/api/health
+curl -i http://localhost:5173/api/health
+```
+
+Expected health response is `401 Unauthorized`; that still proves the API upstream is reachable. If either command returns `502` or connection refused, restart/rebuild:
+
+```bash
+docker compose up -d --build
+```
+
+If the host has a separate nginx in front of Docker, its `/api/` location must proxy to `http://127.0.0.1:3000`, while normal page traffic proxies to `http://127.0.0.1:5173`.
+
 Rollback:
 
 1. Revert the bad commit.

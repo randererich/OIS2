@@ -174,10 +174,15 @@ async function doFetch(path, options = {}, getAuth, onUnauthorized) {
       ...(options.headers || {})
     };
 
-    const response = await fetch(`${API_BASE}${path}`, {
-      ...options,
-      headers
-    });
+    let response;
+    try {
+      response = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers
+      });
+    } catch {
+      throw new Error("Serveriga ei saa ühendust. Kontrolli, et API server töötab.");
+    }
 
     if (response.status === 401) {
       onUnauthorized();
@@ -213,10 +218,13 @@ async function doFetch(path, options = {}, getAuth, onUnauthorized) {
       }
 
       if (typeof data === "string" && data.trim()) {
+        if (data.trim().startsWith("<")) {
+          throw new Error(`API server ei vasta korralikult (${response.status}). Kontrolli serveri ja nginx'i seadistust.`);
+        }
         throw new Error(data.trim());
       }
 
-      throw new Error("Request failed");
+      throw new Error(`Request failed (${response.status})`);
     }
 
     return data;
