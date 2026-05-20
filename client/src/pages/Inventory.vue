@@ -103,9 +103,9 @@ const cashDenominations = [
   { cents: 500, label: "5 €" },
   { cents: 200, label: "2 €" },
   { cents: 100, label: "1 €" },
-  { cents: 50, label: "50 s" },
-  { cents: 20, label: "20 s" },
-  { cents: 10, label: "10 s" }
+  { cents: 50, label: "0.5 €" },
+  { cents: 20, label: "0.2 €" },
+  { cents: 10, label: "0.1 €" }
 ];
 const cashCounts = reactive(
   Object.fromEntries(cashDenominations.map((denomination) => [denomination.cents, "0"]))
