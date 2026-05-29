@@ -4,10 +4,13 @@ import { fileURLToPath } from "url";
 import { query, transaction } from "../src/db.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CSV_PATH = path.join(__dirname, "../../database/Isikud.csv");
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
+const peoplePathArg = process.argv.find((arg) => arg.startsWith("--people="))?.split("=")[1];
+const CSV_PATH = path.resolve(
+  peoplePathArg || process.env.ISIKUD_CSV_PATH || path.join(__dirname, "../../database/Isikud.csv")
+);
 
 // Simple CSV parser that handles edge cases
 function parseCSVLine(line) {

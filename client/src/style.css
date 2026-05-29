@@ -62,7 +62,7 @@
 
 body {
   margin: 0;
-  font-family: "Georgia", "Times New Roman", serif;
+  font-family: "Aerial", "Times New Roman", serif;
   background:
     linear-gradient(rgba(248, 248, 248, 0.82), rgba(248, 248, 248, 0.82)),
     url("../bg.jpg") center / cover fixed no-repeat;

@@ -4,6 +4,10 @@
 
     <div class="actions">
       <button type="button" @click="openCreatePerson">Lisa inimene</button>
+      <label>
+        <input v-model="showHidden" type="checkbox" @change="loadPeople" />
+        Näita peidetuid
+      </label>
     </div>
 
     <p v-if="error" class="error">{{ error }}</p>
@@ -83,6 +87,7 @@ import { apiFetchAdmin } from "../api/client";
 const people = ref([]);
 const error = ref("");
 const showForm = ref(false);
+const showHidden = ref(false);
 
 const initialForm = () => ({
   id: null,
@@ -112,7 +117,13 @@ function openCreatePerson() {
 async function loadPeople() {
   error.value = "";
   try {
-    people.value = await apiFetchAdmin("/admin/people");
+    const params = new URLSearchParams();
+    if (showHidden.value) {
+      params.set("include_hidden", "true");
+    }
+
+    const query = params.toString();
+    people.value = await apiFetchAdmin(`/admin/people${query ? `?${query}` : ""}`);
   } catch (err) {
     error.value = err.message;
   }

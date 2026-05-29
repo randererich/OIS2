@@ -28,14 +28,16 @@ function parseMonth(monthInput) {
 export async function getPeople(req, res, next) {
   try {
     const q = (req.query.q || "").trim();
+    const includeHidden = String(req.query.include_hidden || "false") === "true";
+    const visibilityFilter = includeHidden ? "" : "is_visible = TRUE AND ";
 
     if (q) {
       const result = await query(
         `SELECT *
          FROM people
-         WHERE CONCAT(first_name, ' ', last_name) ILIKE $1
+         WHERE ${visibilityFilter}(CONCAT(first_name, ' ', last_name) ILIKE $1
             OR COALESCE(coetus, '') ILIKE $1
-            OR COALESCE(konvent, '') ILIKE $1
+            OR COALESCE(konvent, '') ILIKE $1)
          ORDER BY ${COETUS_SORT_SQL}, last_name ASC, first_name ASC`,
         [`%${q}%`]
       );
@@ -45,6 +47,7 @@ export async function getPeople(req, res, next) {
     const result = await query(
       `SELECT *
        FROM people
+       ${includeHidden ? "" : "WHERE is_visible = TRUE"}
        ORDER BY ${COETUS_SORT_SQL}, last_name ASC, first_name ASC`
     );
     res.json(result.rows);
@@ -347,6 +350,10 @@ export async function updatePerson(req, res, next) {
 export async function deletePerson(req, res, next) {
   try {
     const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ error: "valid person id is required" });
+    }
+
     const result = await query("DELETE FROM people WHERE id = $1 RETURNING id", [id]);
 
     if (result.rowCount === 0) {
@@ -356,8 +363,28 @@ export async function deletePerson(req, res, next) {
     res.status(204).send();
   } catch (error) {
     if (error.code === "23503") {
-      error.status = 400;
-      error.message = "Cannot delete person with existing purchases or payments. Hide person instead.";
+      try {
+        const id = Number(req.params.id);
+        const result = await query(
+          `UPDATE people
+           SET is_visible = FALSE
+           WHERE id = $1
+           RETURNING id`,
+          [id]
+        );
+
+        if (result.rowCount === 0) {
+          return res.status(404).json({ error: "Person not found" });
+        }
+
+        return res.json({
+          id,
+          deleted: false,
+          hidden: true
+        });
+      } catch (hideError) {
+        return next(hideError);
+      }
     }
     next(error);
   }
