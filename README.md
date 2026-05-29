@@ -11,7 +11,7 @@ Regular users can select a product, enter a quantity or cash amount, select a pe
 - Database: PostgreSQL
 - Auth: shared HTTP Basic Auth credentials
 - Runtime: Docker Compose
-Juhhei
+Juhhe
 ## Quick Start
 
 Start the full app with Docker:
