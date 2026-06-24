@@ -25,6 +25,85 @@ function parseMonth(monthInput) {
   return { start, end };
 }
 
+function getLimit(rawLimit, defaultLimit = 50) {
+  const parsed = Number.parseInt(rawLimit || String(defaultLimit), 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return defaultLimit;
+  }
+  return Math.min(parsed, 200);
+}
+
+function isValidDateInput(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) {
+    return false;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
+function buildPersonPurchaseDateFilter(req, startIndex = 2) {
+  const month = String(req.query.month || "").trim();
+  const dateFrom = String(req.query.date_from || "").trim();
+  const dateTo = String(req.query.date_to || "").trim();
+
+  if (month && !dateFrom && !dateTo) {
+    const parsedMonth = parseMonth(month);
+    if (!parsedMonth) {
+      return { error: "month must be YYYY-MM" };
+    }
+
+    return {
+      params: [parsedMonth.start.toISOString(), parsedMonth.end.toISOString()],
+      purchaseSql: `AND pu.created_at >= $${startIndex} AND pu.created_at < $${startIndex + 1}`,
+      adjustmentSql: `AND da.created_at >= $${startIndex} AND da.created_at < $${startIndex + 1}`,
+      range: { month }
+    };
+  }
+
+  if (dateFrom && !isValidDateInput(dateFrom)) {
+    return { error: "date_from must be YYYY-MM-DD" };
+  }
+
+  if (dateTo && !isValidDateInput(dateTo)) {
+    return { error: "date_to must be YYYY-MM-DD" };
+  }
+
+  if (dateFrom && dateTo && dateFrom > dateTo) {
+    return { error: "date_from must be before or equal to date_to" };
+  }
+
+  const params = [];
+  const purchaseClauses = [];
+  const adjustmentClauses = [];
+
+  if (dateFrom) {
+    params.push(dateFrom);
+    const placeholder = `$${startIndex + params.length - 1}`;
+    purchaseClauses.push(`pu.created_at >= ${placeholder}::date`);
+    adjustmentClauses.push(`da.created_at >= ${placeholder}::date`);
+  }
+
+  if (dateTo) {
+    params.push(dateTo);
+    const placeholder = `$${startIndex + params.length - 1}`;
+    purchaseClauses.push(`pu.created_at < (${placeholder}::date + INTERVAL '1 day')`);
+    adjustmentClauses.push(`da.created_at < (${placeholder}::date + INTERVAL '1 day')`);
+  }
+
+  return {
+    params,
+    purchaseSql: purchaseClauses.length ? `AND ${purchaseClauses.join(" AND ")}` : "",
+    adjustmentSql: adjustmentClauses.length ? `AND ${adjustmentClauses.join(" AND ")}` : "",
+    range: { date_from: dateFrom || null, date_to: dateTo || null }
+  };
+}
+
 export async function getPeople(req, res, next) {
   try {
     const q = (req.query.q || "").trim();
@@ -143,23 +222,23 @@ export async function getPersonBalance(req, res, next) {
   }
 }
 
-export async function getPersonMonthlyPurchases(req, res, next) {
+export async function getPersonPurchases(req, res, next) {
   try {
     const personId = Number(req.params.id);
-    const month = req.query.month;
     const includeCancelled = String(req.query.include_cancelled || "false") === "true";
+    const limit = getLimit(req.query.limit, 50);
 
     if (!personId) {
       return res.status(400).json({ error: "valid person id is required" });
     }
 
-    const parsedMonth = parseMonth(month);
-    if (!parsedMonth) {
-      return res.status(400).json({ error: "month must be YYYY-MM" });
+    const dateFilter = buildPersonPurchaseDateFilter(req);
+    if (dateFilter.error) {
+      return res.status(400).json({ error: dateFilter.error });
     }
 
     const personResult = await query(
-      `SELECT id, first_name, last_name, debt AS balance
+      `SELECT id, first_name, last_name, coetus, konvent, debt AS balance
        FROM person_debts
        WHERE id = $1`,
       [personId]
@@ -169,31 +248,37 @@ export async function getPersonMonthlyPurchases(req, res, next) {
       return res.status(404).json({ error: "Person not found" });
     }
 
-    const params = [personId, parsedMonth.start.toISOString(), parsedMonth.end.toISOString()];
+    const params = [personId, ...dateFilter.params];
     let cancellationFilter = "AND pu.is_cancelled = FALSE";
     if (includeCancelled) {
       cancellationFilter = "";
     }
 
+    const hasProductUnit = await hasTableColumn("products", "unit");
+    const summaryUnitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT";
+    const summaryUnitGroupBy = hasProductUnit ? ", pr.unit" : "";
+    const unitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT AS unit";
+
     const summaryResult = await query(
       `SELECT
          pu.product_id,
          pr.name AS product_name,
-         SUM(pu.quantity)::NUMERIC(10,2) AS total_quantity,
-         SUM(pu.total_price)::NUMERIC(10,2) AS total_sum
+         ${summaryUnitSql} AS unit,
+         COUNT(pu.id)::INT AS purchase_count,
+         COALESCE(SUM(pu.quantity), 0)::NUMERIC(10,2) AS total_quantity,
+         COALESCE(SUM(pu.total_price), 0)::NUMERIC(10,2) AS total_sum
        FROM purchases pu
        JOIN products pr ON pr.id = pu.product_id
        WHERE pu.person_id = $1
-         AND pu.created_at >= $2
-         AND pu.created_at < $3
+         ${dateFilter.purchaseSql}
          ${cancellationFilter}
-       GROUP BY pu.product_id, pr.name
+       GROUP BY pu.product_id, pr.name${summaryUnitGroupBy}
        ORDER BY total_quantity DESC, total_sum DESC, pr.name ASC`,
       params
     );
 
-        const hasProductUnit = await hasTableColumn("products", "unit");
-        const unitSql = hasProductUnit ? "pr.unit" : "'tk'::TEXT AS unit";
+    const purchaseParams = [...params, limit];
+    const limitPlaceholder = `$${purchaseParams.length}`;
 
     const purchasesResult = await query(
       `SELECT *
@@ -213,8 +298,7 @@ export async function getPersonMonthlyPurchases(req, res, next) {
          FROM purchases pu
          JOIN products pr ON pr.id = pu.product_id
          WHERE pu.person_id = $1
-           AND pu.created_at >= $2
-           AND pu.created_at < $3
+           ${dateFilter.purchaseSql}
            ${cancellationFilter}
 
          UNION ALL
@@ -233,16 +317,17 @@ export async function getPersonMonthlyPurchases(req, res, next) {
            da.operation AS debt_adjustment_operation
          FROM debt_adjustments da
          WHERE da.person_id = $1
-           AND da.created_at >= $2
-           AND da.created_at < $3
+           ${dateFilter.adjustmentSql}
        ) rows
-       ORDER BY created_at DESC`,
-      params
+       ORDER BY created_at DESC
+       LIMIT ${limitPlaceholder}`,
+      purchaseParams
     );
 
     res.json({
       person: personResult.rows[0],
-      month,
+      range: dateFilter.range,
+      limit,
       summary_by_product: summaryResult.rows,
       purchases: purchasesResult.rows
     });
@@ -250,6 +335,8 @@ export async function getPersonMonthlyPurchases(req, res, next) {
     next(error);
   }
 }
+
+export const getPersonMonthlyPurchases = getPersonPurchases;
 
 export async function createPerson(req, res, next) {
   try {

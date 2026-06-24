@@ -3,6 +3,7 @@ import {
   getPeople,
   getPersonBalance,
   getPersonMonthlyPurchases,
+  getPersonPurchases,
   getRecentBuyers,
   getVisiblePeople
 } from "../controllers/people.controller.js";
@@ -13,6 +14,7 @@ router.get("/", getPeople);
 router.get("/visible", getVisiblePeople);
 router.get("/recent-buyers", getRecentBuyers);
 router.get("/:id/balance", getPersonBalance);
+router.get("/:id/purchases", getPersonPurchases);
 router.get("/:id/monthly-purchases", getPersonMonthlyPurchases);
 
 export default router;

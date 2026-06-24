@@ -39,6 +39,7 @@
 import { computed, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { RouterLink, RouterView } from "vue-router";
+import { startRegularAuthKeepAlive } from "./api/client";
 
 const route = useRoute();
 const isAdminRoute = computed(() => route.path.startsWith("/admin"));
@@ -59,6 +60,7 @@ onMounted(() => {
   const saved = localStorage.getItem("theme");
   isDark.value = saved === "dark";
   applyTheme(isDark.value);
+  startRegularAuthKeepAlive();
 });
 </script>
 

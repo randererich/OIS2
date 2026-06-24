@@ -2,6 +2,10 @@ const API_BASE = import.meta.env.VITE_API_BASE || "/api";
 
 const REGULAR_AUTH_COOKIE = "konvent_pos_auth";
 const REGULAR_AUTH_TTL_SECONDS = 30 * 60;
+const REGULAR_AUTH_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+let regularAuth = null;
+let regularAuthPrompt = null;
+let regularAuthKeepAliveStarted = false;
 let adminAuth = null;
 
 function getCookie(name) {
@@ -20,6 +24,36 @@ function setCookie(name, value, maxAgeSeconds) {
 
 function clearCookie(name) {
   document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
+function readStoredRegularAuth() {
+  const auth = getCookie(REGULAR_AUTH_COOKIE);
+  if (auth) {
+    regularAuth = auth;
+    return auth;
+  }
+
+  if (regularAuth) {
+    setCookie(REGULAR_AUTH_COOKIE, regularAuth, REGULAR_AUTH_TTL_SECONDS);
+    return regularAuth;
+  }
+
+  return "";
+}
+
+function rememberRegularAuth(auth) {
+  regularAuth = auth;
+  setCookie(REGULAR_AUTH_COOKIE, auth, REGULAR_AUTH_TTL_SECONDS);
+}
+
+function refreshRegularAuthCookie() {
+  const auth = regularAuth || getCookie(REGULAR_AUTH_COOKIE);
+  if (!auth) {
+    return;
+  }
+
+  regularAuth = auth;
+  setCookie(REGULAR_AUTH_COOKIE, auth, REGULAR_AUTH_TTL_SECONDS);
 }
 
 function requestCredentials({ title, usernameLabel, passwordLabel, passwordOnly = false }) {
@@ -125,24 +159,30 @@ function requestCredentials({ title, usernameLabel, passwordLabel, passwordOnly 
 }
 
 async function readOrPromptRegularAuth(usernamePrompt, passwordPrompt) {
-  let auth = getCookie(REGULAR_AUTH_COOKIE);
+  let auth = readStoredRegularAuth();
 
   if (!auth) {
-    const creds = await requestCredentials({
-      title: "Konvent ÕIS autentimine",
-      usernameLabel: usernamePrompt,
-      passwordLabel: passwordPrompt,
-      passwordOnly: false
-    });
+    if (!regularAuthPrompt) {
+      regularAuthPrompt = requestCredentials({
+        title: "Konvent ÕIS autentimine",
+        usernameLabel: usernamePrompt,
+        passwordLabel: passwordPrompt,
+        passwordOnly: false
+      }).finally(() => {
+        regularAuthPrompt = null;
+      });
+    }
+
+    const creds = await regularAuthPrompt;
 
     if (!creds?.username || !creds?.password) {
       throw new Error("Username and password are required");
     }
 
     auth = `Basic ${btoa(`${creds.username}:${creds.password}`)}`;
-    setCookie(REGULAR_AUTH_COOKIE, auth, REGULAR_AUTH_TTL_SECONDS);
   }
 
+  rememberRegularAuth(auth);
   return auth;
 }
 
@@ -238,6 +278,7 @@ export function apiFetch(path, options = {}) {
     () => readOrPromptRegularAuth("Konvent ÕIS kasutajanimi:", "Konvent ÕIS parool:"),
     () => {
       clearCookie(REGULAR_AUTH_COOKIE);
+      regularAuth = null;
     }
   );
 }
@@ -266,4 +307,18 @@ export function updateAdminAuthPassword(newPassword) {
     return;
   }
   adminAuth = `Basic ${btoa(`admin:${newPassword}`)}`;
+}
+
+export function startRegularAuthKeepAlive() {
+  if (regularAuthKeepAliveStarted || typeof window === "undefined") {
+    return;
+  }
+
+  regularAuthKeepAliveStarted = true;
+  refreshRegularAuthCookie();
+  window.setInterval(refreshRegularAuthCookie, REGULAR_AUTH_REFRESH_INTERVAL_MS);
+  window.addEventListener("focus", refreshRegularAuthCookie);
+  window.addEventListener("online", refreshRegularAuthCookie);
+  window.addEventListener("pageshow", refreshRegularAuthCookie);
+  document.addEventListener("visibilitychange", refreshRegularAuthCookie);
 }
