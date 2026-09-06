@@ -1,19 +1,5 @@
 import { hasTableColumn, query } from "../db.js";
-
-function cashOperationFor(categoryName, productName) {
-  if (!["Sularaha", "REPART", "🪙 REPART 🪙"].includes(categoryName)) {
-    return null;
-  }
-
-  const normalizedName = String(productName || "").toLowerCase();
-  if (normalizedName === "sissemakse") {
-    return "cash_deposit";
-  }
-  if (normalizedName === "väljamakse" || normalizedName === "valjamakse") {
-    return "cash_withdrawal";
-  }
-  return null;
-}
+import { cashOperationFor } from "../services/debtRules.js";
 
 export async function getProducts(req, res, next) {
   try {

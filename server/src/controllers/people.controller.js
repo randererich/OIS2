@@ -1,14 +1,58 @@
 import { hasTableColumn, query } from "../db.js";
+import { purchaseDebtEffect } from "../services/debtRules.js";
 
-const COETUS_SORT_SQL = `
-  CASE WHEN coetus ~ '^\\d{4}/(I|II)$' THEN 1 ELSE 0 END DESC,
-  CASE WHEN coetus ~ '^\\d{4}/(I|II)$' THEN split_part(coetus, '/', 1)::INT ELSE 0 END DESC,
-  CASE split_part(coetus, '/', 2)
+function coetusSortSql(alias = "") {
+  const prefix = alias ? `${alias}.` : "";
+  return `
+  CASE WHEN ${prefix}coetus ~ '^\\d{4}/(I|II)$' THEN 1 ELSE 0 END DESC,
+  CASE WHEN ${prefix}coetus ~ '^\\d{4}/(I|II)$' THEN split_part(${prefix}coetus, '/', 1)::INT ELSE 0 END DESC,
+  CASE split_part(${prefix}coetus, '/', 2)
     WHEN 'II' THEN 2
     WHEN 'I' THEN 1
     ELSE 0
   END DESC
 `;
+}
+
+async function buildDebtSelectionFilter(req) {
+  const hasProductId = req.query.product_id !== undefined;
+  const hasQuantity = req.query.quantity !== undefined;
+
+  if (!hasProductId && !hasQuantity) {
+    return { pendingDebtEffect: null };
+  }
+
+  if (!hasProductId || !hasQuantity) {
+    return { error: "product_id and quantity are required together", status: 400 };
+  }
+
+  const productId = Number(req.query.product_id);
+  const quantity = Number(req.query.quantity);
+
+  if (!Number.isInteger(productId) || productId <= 0 || !Number.isFinite(quantity) || quantity === 0) {
+    return { error: "valid product_id and non-zero quantity are required", status: 400 };
+  }
+
+  const productResult = await query(
+    `SELECT p.id, p.name, p.price, c.name AS category_name
+     FROM products p
+     LEFT JOIN categories c ON c.id = p.category_id
+     WHERE p.id = $1`,
+    [productId]
+  );
+
+  if (productResult.rowCount === 0) {
+    return { error: "Product not found", status: 404 };
+  }
+
+  return {
+    pendingDebtEffect: purchaseDebtEffect({
+      product: productResult.rows[0],
+      quantity,
+      paidWithCash: false
+    })
+  };
+}
 
 function parseMonth(monthInput) {
   if (!/^\d{4}-\d{2}$/.test(monthInput || "")) {
@@ -117,7 +161,7 @@ export async function getPeople(req, res, next) {
          WHERE ${visibilityFilter}(CONCAT(first_name, ' ', last_name) ILIKE $1
             OR COALESCE(coetus, '') ILIKE $1
             OR COALESCE(konvent, '') ILIKE $1)
-         ORDER BY ${COETUS_SORT_SQL}, last_name ASC, first_name ASC`,
+         ORDER BY ${coetusSortSql()}, last_name ASC, first_name ASC`,
         [`%${q}%`]
       );
       return res.json(result.rows);
@@ -127,7 +171,7 @@ export async function getPeople(req, res, next) {
       `SELECT *
        FROM people
        ${includeHidden ? "" : "WHERE is_visible = TRUE"}
-       ORDER BY ${COETUS_SORT_SQL}, last_name ASC, first_name ASC`
+       ORDER BY ${coetusSortSql()}, last_name ASC, first_name ASC`
     );
     res.json(result.rows);
   } catch (error) {
@@ -137,20 +181,33 @@ export async function getPeople(req, res, next) {
 
 export async function getVisiblePeople(req, res, next) {
   try {
+    const debtFilter = await buildDebtSelectionFilter(req);
+    if (debtFilter.error) {
+      return res.status(debtFilter.status).json({ error: debtFilter.error });
+    }
+
     const q = (req.query.q || "").trim();
     const params = [];
-    const where = ["is_visible = TRUE"];
+    const where = ["pe.is_visible = TRUE"];
+    const joins = [];
 
     if (q) {
       params.push(`%${q}%`);
-      where.push("CONCAT(first_name, ' ', last_name) ILIKE $1");
+      where.push("CONCAT(pe.first_name, ' ', pe.last_name) ILIKE $1");
+    }
+
+    if (debtFilter.pendingDebtEffect > 0) {
+      joins.push("LEFT JOIN person_debts pd ON pd.id = pe.id");
+      params.push(debtFilter.pendingDebtEffect);
+      where.push(`NOT (pe.disallow_debt = TRUE AND COALESCE(pd.debt, 0) + $${params.length} > 0)`);
     }
 
     const result = await query(
-      `SELECT *
-       FROM people
+      `SELECT pe.*
+       FROM people pe
+       ${joins.join(" ")}
        WHERE ${where.join(" AND ")}
-       ORDER BY ${COETUS_SORT_SQL}, sort_order ASC, last_name ASC, first_name ASC`,
+       ORDER BY ${coetusSortSql("pe")}, pe.sort_order ASC, pe.last_name ASC, pe.first_name ASC`,
       params
     );
     res.json(result.rows);
@@ -161,10 +218,22 @@ export async function getVisiblePeople(req, res, next) {
 
 export async function getRecentBuyers(req, res, next) {
   try {
+    const debtFilter = await buildDebtSelectionFilter(req);
+    if (debtFilter.error) {
+      return res.status(debtFilter.status).json({ error: debtFilter.error });
+    }
+
     const requestedMinutes = Number.parseInt(String(req.query.minutes || "20"), 10);
     const minutes = Number.isInteger(requestedMinutes) && requestedMinutes > 0
       ? Math.min(requestedMinutes, 720)
       : 20;
+    const params = [minutes];
+    const where = ["NOT (lower(pe.first_name) = lower('Sula') AND lower(pe.last_name) = lower('Raha'))"];
+
+    if (debtFilter.pendingDebtEffect > 0) {
+      params.push(debtFilter.pendingDebtEffect);
+      where.push(`NOT (pe.disallow_debt = TRUE AND COALESCE(pd.debt, 0) + $${params.length} > 0)`);
+    }
 
     const result = await query(
       `WITH recent AS (
@@ -187,9 +256,9 @@ export async function getRecentBuyers(req, res, next) {
        FROM recent r
        JOIN people pe ON pe.id = r.person_id
        LEFT JOIN person_debts pd ON pd.id = pe.id
-       WHERE NOT (lower(pe.first_name) = lower('Sula') AND lower(pe.last_name) = lower('Raha'))
+       WHERE ${where.join(" AND ")}
        ORDER BY r.last_purchase_at DESC, pe.last_name ASC, pe.first_name ASC`,
-      [minutes]
+      params
     );
 
     res.json(result.rows);
@@ -346,6 +415,7 @@ export async function createPerson(req, res, next) {
       coetus,
       konvent,
       is_visible = true,
+      disallow_debt = false,
       sort_order
     } = req.body;
 
@@ -363,8 +433,8 @@ export async function createPerson(req, res, next) {
 
     const result = await query(
       `INSERT INTO people
-         (first_name, last_name, coetus, konvent, is_visible, sort_order)
-       VALUES ($1, $2, $3, $4, $5, $6)
+         (first_name, last_name, coetus, konvent, is_visible, disallow_debt, sort_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
       [
         first_name,
@@ -372,6 +442,7 @@ export async function createPerson(req, res, next) {
         coetus || null,
         konvent || null,
         Boolean(is_visible),
+        Boolean(disallow_debt),
         resolvedSortOrder
       ]
     );
@@ -391,6 +462,7 @@ export async function updatePerson(req, res, next) {
       coetus,
       konvent,
       is_visible = true,
+      disallow_debt = false,
       sort_order
     } = req.body;
 
@@ -410,8 +482,9 @@ export async function updatePerson(req, res, next) {
            coetus = $3,
            konvent = $4,
            is_visible = $5,
-           sort_order = COALESCE($6, sort_order)
-       WHERE id = $7
+           disallow_debt = $6,
+           sort_order = COALESCE($7, sort_order)
+       WHERE id = $8
        RETURNING *`,
       [
         first_name,
@@ -419,6 +492,7 @@ export async function updatePerson(req, res, next) {
         coetus || null,
         konvent || null,
         Boolean(is_visible),
+        Boolean(disallow_debt),
         Number.isInteger(resolvedSortOrder) ? resolvedSortOrder : null,
         id
       ]

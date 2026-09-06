@@ -97,6 +97,24 @@ function money(value) {
   return `${Number(value || 0).toFixed(2)} €`;
 }
 
+function selectionParams() {
+  const params = new URLSearchParams();
+  const productId = Number(posStore.product?.id);
+  const quantity = Number(posStore.quantity);
+
+  if (Number.isInteger(productId) && productId > 0 && Number.isFinite(quantity) && quantity !== 0) {
+    params.set("product_id", String(productId));
+    params.set("quantity", String(quantity));
+  }
+
+  return params;
+}
+
+function querySuffix(params) {
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 function parseCoetusParts(coetus) {
   const raw = String(coetus || "");
   const match = raw.match(/^(\d{4})\/(I|II)$/);
@@ -179,9 +197,13 @@ async function loadPeople() {
   loading.value = true;
   error.value = "";
   try {
+    const peopleParams = selectionParams();
+    const recentParams = selectionParams();
+    recentParams.set("minutes", "20");
+
     const [peopleData, recentData] = await Promise.all([
-      apiFetch("/people/visible"),
-      apiFetch("/people/recent-buyers?minutes=20")
+      apiFetch(`/people/visible${querySuffix(peopleParams)}`),
+      apiFetch(`/people/recent-buyers${querySuffix(recentParams)}`)
     ]);
     people.value = peopleData;
     recentBuyers.value = recentData;

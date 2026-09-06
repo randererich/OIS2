@@ -19,6 +19,7 @@
           <th>Coetus</th>
           <th>Konvent</th>
           <th>Nahtav</th>
+          <th>Ei luba võlga</th>
           <th>Tegevus</th>
         </tr>
       </thead>
@@ -28,6 +29,7 @@
           <td>{{ person.coetus || '-' }}</td>
           <td>{{ person.konvent || '-' }}</td>
           <td>{{ person.is_visible ? 'Jah' : 'Ei' }}</td>
+          <td>{{ person.disallow_debt ? 'Jah' : 'Ei' }}</td>
           <td>
             <div class="actions">
               <button type="button" @click="editPerson(person)">Edit</button>
@@ -70,6 +72,10 @@
             <input v-model="form.is_visible" type="checkbox" /> Nahtav
           </label>
 
+          <label>
+            <input v-model="form.disallow_debt" type="checkbox" /> Ei luba võlga
+          </label>
+
           <div class="actions" style="align-items: end">
             <button type="submit">Salvesta</button>
             <button type="button" @click="resetForm">Puhasta</button>
@@ -95,7 +101,8 @@ const initialForm = () => ({
   last_name: "",
   coetus: "",
   konvent: "",
-  is_visible: true
+  is_visible: true,
+  disallow_debt: false
 });
 
 const form = reactive(initialForm());
@@ -136,6 +143,7 @@ function editPerson(person) {
   form.coetus = person.coetus || "";
   form.konvent = person.konvent || "";
   form.is_visible = person.is_visible;
+  form.disallow_debt = Boolean(person.disallow_debt);
   showForm.value = true;
 }
 
@@ -146,7 +154,8 @@ async function savePerson() {
     last_name: form.last_name,
     coetus: form.coetus || null,
     konvent: form.konvent || null,
-    is_visible: Boolean(form.is_visible)
+    is_visible: Boolean(form.is_visible),
+    disallow_debt: Boolean(form.disallow_debt)
   };
 
   try {

@@ -1,7 +1,15 @@
 import { transaction } from "../db.js";
+import {
+  cashOperationFor,
+  purchaseDebtEffect,
+  wouldCreateDisallowedDebt
+} from "./debtRules.js";
 
 export async function ensureCashSetup() {
   await transaction(async (client) => {
+    await client.query(
+      "ALTER TABLE people ADD COLUMN IF NOT EXISTS disallow_debt BOOLEAN NOT NULL DEFAULT FALSE"
+    );
     await ensureDecimalQuantityColumns(client);
     await client.query(
       "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS affects_debt BOOLEAN NOT NULL DEFAULT TRUE"
@@ -175,21 +183,6 @@ async function ensureDecimalQuantityColumns(client) {
   }
 }
 
-function cashOperationFor(product) {
-  if (!["Sularaha", "REPART", "🪙 REPART 🪙"].includes(product.category_name)) {
-    return null;
-  }
-
-  const normalizedName = String(product.name || "").toLowerCase();
-  if (normalizedName === "sissemakse") {
-    return "cash_deposit";
-  }
-  if (normalizedName === "väljamakse" || normalizedName === "valjamakse") {
-    return "cash_withdrawal";
-  }
-  return null;
-}
-
 async function insertPurchase(
   client,
   {
@@ -235,7 +228,7 @@ export async function createPurchase({
 }) {
   return transaction(async (client) => {
     const personResult = await client.query(
-      "SELECT id, first_name, last_name FROM people WHERE id = $1",
+      "SELECT id, first_name, last_name, disallow_debt FROM people WHERE id = $1 FOR UPDATE",
       [personId]
     );
 
@@ -244,6 +237,12 @@ export async function createPurchase({
       err.status = 404;
       throw err;
     }
+
+    const debtResult = await client.query(
+      "SELECT debt FROM person_debts WHERE id = $1",
+      [personId]
+    );
+    const currentDebt = Number(debtResult.rows[0]?.debt || 0);
 
     const productResult = await client.query(
       `SELECT
@@ -269,7 +268,7 @@ export async function createPurchase({
 
     const product = productResult.rows[0];
     const unitPrice = Number(product.price);
-    const cashOperation = cashOperationFor(product);
+    const cashOperation = cashOperationFor(product.category_name, product.name);
     const cashPaid = Boolean(paidWithCash);
 
     if (!cashOperation && (!Number.isFinite(Number(quantity)) || Math.abs(Number(quantity)) > maxPurchaseQuantity)) {
@@ -294,6 +293,20 @@ export async function createPurchase({
 
       const baseComment = comment || product.name;
       const cashUnitPrice = Math.abs(unitPrice) || 1;
+      const debtEffect = purchaseDebtEffect({
+        product,
+        quantity: amount,
+        paidWithCash: false
+      });
+
+      if (
+        personResult.rows[0].disallow_debt &&
+        wouldCreateDisallowedDebt({ currentDebt, debtEffect })
+      ) {
+        const err = new Error("Person is not allowed to go into debt");
+        err.status = 400;
+        throw err;
+      }
 
       return insertPurchase(client, {
         personId,
@@ -305,6 +318,21 @@ export async function createPurchase({
         paidWithCash: false,
         cashOperation
       });
+    }
+
+    const debtEffect = purchaseDebtEffect({
+      product,
+      quantity,
+      paidWithCash: cashPaid
+    });
+
+    if (
+      personResult.rows[0].disallow_debt &&
+      wouldCreateDisallowedDebt({ currentDebt, debtEffect })
+    ) {
+      const err = new Error("Person is not allowed to go into debt");
+      err.status = 400;
+      throw err;
     }
 
     const purchase = await insertPurchase(client, {
