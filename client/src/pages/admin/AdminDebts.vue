@@ -12,10 +12,28 @@
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="success" class="success">{{ success }}</p>
 
+    <div class="actions admin-bulk-actions">
+      <button type="button" :disabled="saving || selectedDebtCount === 0" @click="zeroSelectedDebts">
+        Nulli valitud võlad
+      </button>
+      <button type="button" :disabled="saving || selectedIds.size === 0" @click="clearSelection">
+        Tühista valik
+      </button>
+      <span>Valitud: {{ selectedDebtCount }}</span>
+    </div>
+
     <div class="admin-debts-layout">
       <table>
         <thead>
           <tr>
+            <th class="selection-cell">
+              <input
+                type="checkbox"
+                :checked="allVisibleSelected"
+                :disabled="selectableDebts.length === 0"
+                @change="toggleAllVisible"
+              />
+            </th>
             <th>Inimene</th>
             <th>Coetus</th>
             <th>Konvent</th>
@@ -30,6 +48,15 @@
             :class="{ selected: selectedPerson?.id === person.id }"
             @click="selectPerson(person)"
           >
+            <td class="selection-cell">
+              <input
+                type="checkbox"
+                :checked="selectedIds.has(Number(person.id))"
+                :disabled="Number(person.debt || 0) === 0"
+                @click.stop
+                @change="togglePerson(person, $event)"
+              />
+            </td>
             <td>{{ person.first_name }} {{ person.last_name }}</td>
             <td>{{ person.coetus || '-' }}</td>
             <td>{{ person.konvent || '-' }}</td>
@@ -71,11 +98,12 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { apiFetchAdmin } from "../../api/client";
 
 const debts = ref([]);
 const selectedPerson = ref(null);
+const selectedIds = ref(new Set());
 const search = ref("");
 const amount = ref("");
 const comment = ref("");
@@ -109,10 +137,50 @@ function balanceMessage(balance) {
   return `Kontol üle: ${money(Math.abs(n))}`;
 }
 
+const selectableDebts = computed(() => debts.value.filter((person) => Number(person.debt || 0) !== 0));
+const selectedDebtPeople = computed(() => (
+  debts.value.filter((person) => selectedIds.value.has(Number(person.id)) && Number(person.debt || 0) !== 0)
+));
+const selectedDebtCount = computed(() => selectedDebtPeople.value.length);
+const allVisibleSelected = computed(() => (
+  selectableDebts.value.length > 0 &&
+  selectableDebts.value.every((person) => selectedIds.value.has(Number(person.id)))
+));
+
 function selectPerson(person) {
   selectedPerson.value = person;
   error.value = "";
   success.value = "";
+}
+
+function setSelectedIds(nextIds) {
+  selectedIds.value = new Set(nextIds);
+}
+
+function togglePerson(person, event) {
+  const next = new Set(selectedIds.value);
+  const id = Number(person.id);
+
+  if (event.target.checked) {
+    next.add(id);
+  } else {
+    next.delete(id);
+  }
+
+  setSelectedIds(next);
+}
+
+function toggleAllVisible(event) {
+  if (event.target.checked) {
+    setSelectedIds(selectableDebts.value.map((person) => Number(person.id)));
+    return;
+  }
+
+  clearSelection();
+}
+
+function clearSelection() {
+  setSelectedIds([]);
 }
 
 async function loadDebts() {
@@ -124,6 +192,8 @@ async function loadDebts() {
 
   try {
     debts.value = await apiFetchAdmin(`/admin/debts?${params.toString()}`);
+    const visibleIds = new Set(selectableDebts.value.map((person) => Number(person.id)));
+    setSelectedIds([...selectedIds.value].filter((id) => visibleIds.has(id)));
     if (selectedPerson.value) {
       selectedPerson.value = debts.value.find((person) => person.id === selectedPerson.value.id) || null;
     }
@@ -177,10 +247,55 @@ async function zeroDebt() {
   await sendAdjustment({ operation: "zero" });
 }
 
+async function zeroSelectedDebts() {
+  if (selectedDebtCount.value === 0) {
+    return;
+  }
+
+  const confirmed = window.confirm(`Nullin ${selectedDebtCount.value} valitud saldo?`);
+  if (!confirmed) {
+    return;
+  }
+
+  saving.value = true;
+  error.value = "";
+  success.value = "";
+
+  try {
+    const result = await apiFetchAdmin("/admin/debts/zero-selected", {
+      method: "POST",
+      body: JSON.stringify({
+        person_ids: selectedDebtPeople.value.map((person) => Number(person.id)),
+        comment: "Bulk zero from admin"
+      })
+    });
+
+    clearSelection();
+    amount.value = "";
+    comment.value = "";
+    success.value = `${result.count} saldo nullitud.`;
+    await loadDebts();
+  } catch (err) {
+    error.value = err.message;
+  } finally {
+    saving.value = false;
+  }
+}
+
 onMounted(loadDebts);
 </script>
 
 <style scoped>
+.admin-bulk-actions {
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.selection-cell {
+  text-align: center;
+  width: 42px;
+}
+
 .admin-debts-layout {
   display: grid;
   gap: 18px;

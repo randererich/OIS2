@@ -27,7 +27,7 @@ import {
   updateProduct
 } from "../controllers/products.controller.js";
 import { getCategories } from "../controllers/categories.controller.js";
-import { createDebtAdjustment, getDebts } from "../controllers/payments.controller.js";
+import { createDebtAdjustment, getDebts, zeroSelectedDebts } from "../controllers/payments.controller.js";
 import { getPurchases } from "../controllers/purchases.controller.js";
 
 const router = Router();
@@ -55,6 +55,7 @@ router.get("/purchases", getPurchases);
 
 router.get("/debts", getDebts);
 router.post("/debts/adjustments", createDebtAdjustment);
+router.post("/debts/zero-selected", zeroSelectedDebts);
 
 router.get("/inventory", getInventory);
 router.post("/inventory/movement", postInventoryMovement);

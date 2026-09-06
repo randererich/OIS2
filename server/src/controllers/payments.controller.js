@@ -166,3 +166,60 @@ export async function createDebtAdjustment(req, res, next) {
     next(error);
   }
 }
+
+export async function zeroSelectedDebts(req, res, next) {
+  try {
+    const personIds = Array.isArray(req.body.person_ids)
+      ? [...new Set(req.body.person_ids.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0))]
+      : [];
+
+    if (!personIds.length) {
+      return res.status(400).json({ error: "person_ids must include at least one valid person id" });
+    }
+
+    const result = await transaction(async (client) => {
+      const lockResult = await client.query(
+        `SELECT id
+         FROM people
+         WHERE id = ANY($1::INT[])
+         ORDER BY id ASC
+         FOR UPDATE`,
+        [personIds]
+      );
+
+      if (lockResult.rowCount !== personIds.length) {
+        const error = new Error("One or more people were not found");
+        error.status = 404;
+        throw error;
+      }
+
+      const inserted = await client.query(
+        `INSERT INTO debt_adjustments (person_id, amount, operation, comment)
+         SELECT id, -debt, 'debt_zero', $2
+         FROM person_debts
+         WHERE id = ANY($1::INT[])
+           AND debt <> 0
+         RETURNING *`,
+        [personIds, String(req.body.comment || "").trim() || null]
+      );
+
+      const peopleResult = await client.query(
+        `SELECT id, first_name, last_name, coetus, konvent, debt
+         FROM person_debts
+         WHERE id = ANY($1::INT[])
+         ORDER BY debt DESC, last_name ASC, first_name ASC`,
+        [personIds]
+      );
+
+      return {
+        count: inserted.rowCount,
+        adjustments: inserted.rows,
+        people: peopleResult.rows
+      };
+    });
+
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}

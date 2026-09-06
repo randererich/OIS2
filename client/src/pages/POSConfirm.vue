@@ -207,7 +207,21 @@ onUnmounted(() => {
 }
 
 .confirm-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+  gap: 18px 72px;
   justify-content: center;
+  margin: 10px auto 0;
+  width: 100%;
+  max-width: 680px;
+}
+
+.confirm-actions button {
+  width: 100%;
+  min-height: 64px;
+  padding: 16px 24px;
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
 </style>
